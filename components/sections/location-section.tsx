@@ -48,12 +48,12 @@ const infoVariants = {
 };
 
 const businessHours = [
-  { day: "Lunes y Viernes", hours: "09:00 - 18:00", days: [1, 5] },
+  { day: "Lunes, Jueves y Viernes", hours: "09:00 - 18:00", days: [1, 4, 5] },
   { day: "Sábados y Domingos", hours: "09:00 - 17:00", days: [6, 0] },
   {
-    day: "Martes, Miércoles y Jueves",
+    day: "Martes, Miércoles",
     hours: "Estamos cerrados",
-    days: [2, 3, 4],
+    days: [2, 3],
   },
 ];
 
@@ -76,7 +76,7 @@ export default function LocationSection() {
   const isClosed = () => {
     const currentDay = getCurrentDay();
     // Martes (2), Miércoles (3), Jueves (4) están cerrados
-    return [2, 3, 4].includes(currentDay);
+    return [2, 3].includes(currentDay);
   };
 
   // Función para obtener el color del texto basado en el estado del horario
