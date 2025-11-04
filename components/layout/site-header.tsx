@@ -1,9 +1,11 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { useCart } from "@/hooks/use-cart"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, ShoppingBag, Bike } from "lucide-react"
+import { Menu, ShoppingBag, Bike, ShoppingCart } from "lucide-react"
 import { motion, easeOut } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useThrottle } from "@/hooks/use-throttle"
@@ -23,6 +25,16 @@ const headerVariants = {
 const SiteHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
+  const { getTotalItems } = useCart()
+  const cartItemsCount = getTotalItems()
+  const pathname = usePathname()
+
+  // Helper para ajustar enlaces con hash según la ruta actual
+  const getHashLink = useCallback((hash: string) => {
+    // Si estamos en la página principal, usar solo el hash
+    // Si estamos en otra página (como /carrito), usar /#hash para navegar correctamente
+    return pathname === "/" ? hash : `/${hash}`
+  }, [pathname])
 
   // Memoizar las secciones para evitar recrear el array
   const sections = useMemo(() => ["home", "menu", "galeria", "opiniones", "ubicacion", "pedir"], [])
@@ -177,10 +189,10 @@ const SiteHeader = () => {
   }, [isMenuOpen])
 
   const navLinks = [
-    { href: "#menu", label: "Menú", id: "menu" },
-    { href: "#galeria", label: "Galería", id: "galeria" },
-    { href: "#opiniones", label: "Opiniones", id: "opiniones" },
-    { href: "#ubicacion", label: "Ubicación", id: "ubicacion" },
+    { href: getHashLink("#menu"), label: "Menú", id: "menu" },
+    { href: getHashLink("#galeria"), label: "Galería", id: "galeria" },
+    { href: getHashLink("#opiniones"), label: "Opiniones", id: "opiniones" },
+    { href: getHashLink("#ubicacion"), label: "Ubicación", id: "ubicacion" },
   ]
 
   return (
@@ -191,7 +203,7 @@ const SiteHeader = () => {
       animate="visible"
     >
       <div className="container mx-auto flex h-16 items-center px-4 md:px-6">
-        <Link href="#home" className="flex items-center gap-2" prefetch={false}>
+        <Link href={getHashLink("#home")} className="flex items-center gap-2" prefetch={false}>
           <img src="/bar-icono.svg" alt="Logo Guantanamera" className="h-10 w-10" />
           <div className="flex flex-col">
             <span className="text-xl font-bold text-black">Guantanamera</span>
@@ -252,8 +264,22 @@ const SiteHeader = () => {
             </Link>
           </div>
 
+          {/* Cart Icon */}
+          <Link
+            href="/carrito"
+            className="relative p-2 text-gray-700 hover:text-red-600 transition-colors"
+            title="Ver carrito"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {cartItemsCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                {cartItemsCount > 99 ? "99+" : cartItemsCount}
+              </span>
+            )}
+          </Link>
+
           <Button asChild size="sm" className="bg-red-600 text-white shadow-md shadow-red-500/20 hover:bg-red-700">
-            <a href="#pedir">Pedir Ahora</a>
+            <Link href={getHashLink("#pedir")}>Pedir Ahora</Link>
           </Button>
         </div>
 
@@ -270,7 +296,7 @@ const SiteHeader = () => {
               <div className="flex h-full flex-col">
                 <div className="flex items-center justify-start border-b pb-4">
                   <Link
-                    href="#home"
+                    href={getHashLink("#home")}
                     className="flex items-center gap-2"
                     prefetch={false}
                     onClick={() => setIsMenuOpen(false)}
@@ -338,7 +364,17 @@ const SiteHeader = () => {
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Acción Rápida</h3>
                     <Link
-                      href="#pedir"
+                      href="/carrito"
+                      className="flex items-center gap-3 rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <ShoppingCart className="h-5 w-5 text-gray-600" />
+                      <span className="font-semibold">
+                        Ver Carrito {cartItemsCount > 0 && `(${cartItemsCount})`}
+                      </span>
+                    </Link>
+                    <Link
+                      href={getHashLink("#pedir")}
                       className="block rounded-lg bg-red-600 px-4 py-3 text-center font-semibold text-white hover:bg-red-700 transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >

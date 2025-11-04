@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   MapPin,
   Phone,
@@ -12,6 +13,14 @@ import {
 } from "lucide-react";
 
 export default function SiteFooter() {
+  const pathname = usePathname();
+
+  // Helper para ajustar enlaces con hash según la ruta actual
+  const getHashLink = (hash: string) => {
+    // Si estamos en la página principal, usar solo el hash
+    // Si estamos en otra página (como /carrito), usar /#hash para navegar correctamente
+    return pathname === "/" ? hash : `/${hash}`;
+  };
   return (
     <footer className="bg-black text-white">
       <div className="container mx-auto px-4 md:px-6 py-12">
@@ -68,7 +77,7 @@ export default function SiteFooter() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="#menu"
+                  href={getHashLink("#menu")}
                   className="text-gray-300 hover:text-red-500 transition-colors text-sm"
                 >
                   Nuestro Menú
@@ -76,7 +85,7 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link
-                  href="#galeria"
+                  href={getHashLink("#galeria")}
                   className="text-gray-300 hover:text-red-500 transition-colors text-sm"
                 >
                   Galería
@@ -84,7 +93,7 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link
-                  href="#opiniones"
+                  href={getHashLink("#opiniones")}
                   className="text-gray-300 hover:text-red-500 transition-colors text-sm"
                 >
                   Opiniones
@@ -92,7 +101,7 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link
-                  href="#ubicacion"
+                  href={getHashLink("#ubicacion")}
                   className="text-gray-300 hover:text-red-500 transition-colors text-sm"
                 >
                   Ubicación
@@ -100,7 +109,7 @@ export default function SiteFooter() {
               </li>
               <li>
                 <Link
-                  href="#pedir"
+                  href={getHashLink("#pedir")}
                   className="text-gray-300 hover:text-red-500 transition-colors text-sm"
                 >
                   Hacer Pedido

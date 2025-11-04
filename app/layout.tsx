@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { CartProvider } from "@/contexts/cart-context"
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata = {
@@ -41,7 +42,9 @@ export default function RootLayout({
           inter.variable
         )}
       >
-        {children}
+        <CartProvider>
+          {children}
+        </CartProvider>
         <Analytics />
         <SpeedInsights />
       </body>

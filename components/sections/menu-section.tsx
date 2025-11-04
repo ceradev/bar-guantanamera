@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Star, Wheat, Milk, Egg, Fish, Nut, Bean } from "lucide-react"
+import { Download, Star, Wheat, Milk, Egg, Fish, Nut, Bean, Plus, ShoppingCart } from "lucide-react"
 import Image from "next/image"
 import { motion, useInView } from "framer-motion"
 import { useRef, useState, useMemo, useCallback, memo } from "react"
 import menuData from "@/data/menu-data.json"
-import type { MenuData, MenuItem } from "@/types/menu"
+import type { MenuData, MenuItem, BeverageOrMojo, ComboMeal } from "@/types/menu"
+import ProductModal from "@/components/cart/product-modal"
+import { useCart } from "@/hooks/use-cart"
 // import GlobalSearch from "./global-search"
 
 // Allergen icons mapping
@@ -107,6 +109,9 @@ export default function MenuSection() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [activeTab, setActiveTab] = useState("pollos")
+  const [selectedProduct, setSelectedProduct] = useState<MenuItem | BeverageOrMojo | ComboMeal | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { items } = useCart()
 
   const handleDownloadMenu = useCallback(() => {
     const link = document.createElement("a")
@@ -132,49 +137,84 @@ export default function MenuSection() {
     })
   }, [])
 
-  const renderMenuItem = useCallback((item: MenuItem, index: number) => (
-    <motion.div key={item.name} variants={itemVariants}>
-      <Card className="group overflow-hidden rounded-2xl border-0 bg-white shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-2 h-full">
-        <CardHeader className="p-0 relative">
-          <div className="relative h-48 w-full overflow-hidden">
-            <Image
-              src={item.image || "/placeholder.svg"}
-              alt={item.name}
-              fill
-              className="transition-transform duration-700 group-hover:scale-110 object-cover"
-            />
-            {item.popular && (
-              <Badge className="absolute top-4 right-4 bg-red-600 text-white shadow-lg border-0 px-3 py-1">
-                <Star className="w-3 h-3 mr-1 fill-current" />
-                Popular
-              </Badge>
-            )}
+  const handleProductClick = useCallback((product: MenuItem | BeverageOrMojo | ComboMeal) => {
+    setSelectedProduct(product)
+    setIsModalOpen(true)
+  }, [])
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 flex flex-col">
-          <div className="flex justify-between items-start mb-3">
-            <h4 className="text-lg font-bold text-black leading-tight group-hover:text-red-600 transition-colors duration-200">
-              {item.name}
-            </h4>
-            <span className="text-2xl font-bold text-red-600 ml-3">{item.price}</span>
-          </div>
-          <p className="text-gray-600 text-sm mb-4 flex-grow leading-relaxed">{item.description}</p>
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+    setSelectedProduct(null)
+  }, [])
 
+  const renderMenuItem = useCallback((item: MenuItem, index: number) => {
+    const itemInCart = items.find((cartItem) => cartItem.name === item.name)
+    const cartQuantity = itemInCart?.quantity || 0
 
+    return (
+      <motion.div key={item.name} variants={itemVariants}>
+        <Card className="group overflow-hidden rounded-2xl border-0 bg-white shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-2 h-full cursor-pointer"
+          onClick={() => handleProductClick(item)}
+        >
+          <CardHeader className="p-0 relative">
+            <div className="relative h-48 w-full overflow-hidden">
+              <Image
+                src={item.image || "/placeholder.svg"}
+                alt={item.name}
+                fill
+                className="transition-transform duration-700 group-hover:scale-110 object-cover"
+              />
+              {item.popular && (
+                <Badge className="absolute top-4 right-4 bg-red-600 text-white shadow-lg border-0 px-3 py-1">
+                  <Star className="w-3 h-3 mr-1 fill-current" />
+                  Popular
+                </Badge>
+              )}
 
-          {/* Enhanced Allergens */}
-          {item.allergens.length > 0 && (
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-              <span className="text-sm text-gray-600 font-medium">Alérgenos:</span>
-              <div className="flex gap-2">{renderAllergenIcons(item.allergens)}</div>
+              {cartQuantity > 0 && (
+                <Badge className="absolute top-4 left-4 bg-green-600 text-white shadow-lg border-0 px-3 py-1">
+                  <ShoppingCart className="w-3 h-3 mr-1" />
+                  {cartQuantity} en carrito
+                </Badge>
+              )}
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  ), [renderAllergenIcons])
+          </CardHeader>
+          <CardContent className="p-6 flex flex-col">
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="text-lg font-bold text-black leading-tight group-hover:text-red-600 transition-colors duration-200">
+                {item.name}
+              </h4>
+              <span className="text-2xl font-bold text-red-600 ml-3">{item.price}</span>
+            </div>
+            <p className="text-gray-600 text-sm mb-4 flex-grow leading-relaxed">{item.description}</p>
+
+            {/* Add to Cart Button */}
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleProductClick(item)
+              }}
+              className="w-full bg-red-600 text-white hover:bg-red-700 mt-auto rounded-xl font-semibold"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
+            </Button>
+
+            {/* Enhanced Allergens */}
+            {item.allergens.length > 0 && (
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-3">
+                <span className="text-sm text-gray-600 font-medium">Alérgenos:</span>
+                <div className="flex gap-2">{renderAllergenIcons(item.allergens)}</div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }, [renderAllergenIcons, items, handleProductClick])
 
   return (
     <motion.section 
@@ -319,20 +359,35 @@ export default function MenuSection() {
             </motion.div>
             <motion.h3 variants={itemVariants} className="text-3xl font-bold text-black mb-8">Ofertas Especiales para nuestros clientes</motion.h3>
             <div className="grid md:grid-cols-3 gap-8">
-              {comboMeals.map((combo, index) => (
-                <motion.div 
-                  key={combo.name} 
-                  variants={itemVariants}
-                  className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 group"
-                >
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-200 transition-colors">
-                    <span className="text-2xl">{combo.icon}</span>
-                  </div>
-                  <h4 className="font-bold text-gray-800 mb-2 text-xl">{combo.name}</h4>
-                  <p className="text-gray-600 mb-4">{combo.description}</p>
-                  <span className="text-3xl font-bold text-red-600">{combo.price}</span>
-                </motion.div>
-              ))}
+              {comboMeals.map((combo, index) => {
+                const comboInCart = items.find((cartItem) => cartItem.name === combo.name)
+                const cartQuantity = comboInCart?.quantity || 0
+                
+                return (
+                  <motion.div 
+                    key={combo.name} 
+                    variants={itemVariants}
+                    className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col"
+                  >
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-200 transition-colors">
+                      <span className="text-2xl">{combo.icon}</span>
+                    </div>
+                    <h4 className="font-bold text-gray-800 mb-2 text-xl">{combo.name}</h4>
+                    <p className="text-gray-600 mb-4 flex-grow">{combo.description}</p>
+                    <span className="text-3xl font-bold text-red-600 mb-4">{combo.price}</span>
+                    
+                    {/* Botón Agregar al Carrito */}
+                    <Button
+                      onClick={() => handleProductClick(combo)}
+                      className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
+                      size="sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
+                    </Button>
+                  </motion.div>
+                )
+              })}
             </div>
 
             {/* Enhanced Allergen Legend */}
@@ -388,20 +443,34 @@ export default function MenuSection() {
               <h3 className="text-2xl font-bold text-black">Salsas Tradicionales</h3>
             </motion.div>
             <div className="grid md:grid-cols-3 gap-4">
-              {bebidasYMojos.mojos.map((item, index) => (
-                <motion.div
-                  key={item.name}
-                  variants={itemVariants}
-                  className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors duration-200"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h5 className="font-semibold text-gray-800 text-lg">{item.name}</h5>
-                    <span className="text-xl font-bold text-red-600">{item.price}</span>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-
-                </motion.div>
-              ))}
+              {bebidasYMojos.mojos.map((item, index) => {
+                const itemInCart = items.find((cartItem) => cartItem.name === item.name)
+                const cartQuantity = itemInCart?.quantity || 0
+                
+                return (
+                  <motion.div
+                    key={item.name}
+                    variants={itemVariants}
+                    className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors duration-200 flex flex-col"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h5 className="font-semibold text-gray-800 text-lg">{item.name}</h5>
+                      <span className="text-xl font-bold text-red-600">{item.price}</span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-3 flex-grow">{item.description}</p>
+                    
+                    {/* Botón Agregar al Carrito */}
+                    <Button
+                      onClick={() => handleProductClick(item)}
+                      className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
+                      size="sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
+                    </Button>
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
 
@@ -415,27 +484,49 @@ export default function MenuSection() {
               <h3 className="text-2xl font-bold text-black">Selección de Bebidas</h3>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {bebidasYMojos.bebidas.map((item) => (
-                <div
-                  key={item.name}
-                  className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors duration-200"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h5 className="font-semibold text-gray-800">{item.name}</h5>
-                    <span className="text-lg font-bold text-red-600">{item.price}</span>
+              {bebidasYMojos.bebidas.map((item) => {
+                const itemInCart = items.find((cartItem) => cartItem.name === item.name)
+                const cartQuantity = itemInCart?.quantity || 0
+                
+                return (
+                  <div
+                    key={item.name}
+                    className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors duration-200 flex flex-col"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h5 className="font-semibold text-gray-800">{item.name}</h5>
+                      <span className="text-lg font-bold text-red-600">{item.price}</span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-3 flex-grow">{item.description}</p>
+                    <div className="flex items-center justify-between mb-3">
+                      {item.allergens.length > 0 && (
+                        <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
+                      )}
+                    </div>
+                    
+                    {/* Botón Agregar al Carrito */}
+                    <Button
+                      onClick={() => handleProductClick(item)}
+                      className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
+                      size="sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
+                    </Button>
                   </div>
-                  <p className="text-gray-600 text-sm mb-3">{item.description}</p>
-                  <div className="flex items-center justify-between">
-                    {item.allergens.length > 0 && (
-                      <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </motion.div>
       </div>
+
+      {/* Product Modal */}
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        product={selectedProduct}
+      />
     </motion.section>
   )
 }
