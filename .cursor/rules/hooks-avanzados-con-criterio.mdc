@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# Hooks avanzados con criterio
+
+No te limites a `useState`/`useEffect`. Emplea **hooks avanzados** (`useMemo`, `useCallback`, `useReducer`, `useLayoutEffect`, `useRef`, `useTransition`, etc.) cuando aporten eficiencia o claridad, y **justifica brevemente** su elección.

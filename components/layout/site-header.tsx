@@ -1,11 +1,12 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, ShoppingBag, Bike } from "lucide-react"
 import { motion, easeOut } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useThrottle } from "@/hooks/use-throttle"
 
 const headerVariants = {
   hidden: { y: -50, opacity: 0 },
@@ -23,40 +24,54 @@ const SiteHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
 
-  useEffect(() => {
-    // Set initial active section based on scroll position
-    const setInitialActiveSection = () => {
-      const sections = ["home", "menu", "galeria", "opiniones", "ubicacion", "pedir"]
-      const scrollPosition = window.scrollY + 100 // Add offset for header height
-      
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const element = document.getElementById(sections[i])
-        if (element) {
-          const elementTop = element.offsetTop
-          if (scrollPosition >= elementTop) {
-            setActiveSection(sections[i])
-            
-            // Update URL to reflect current section
-            const newUrl = `#${sections[i]}`
-            if (window.location.hash !== newUrl) {
-              window.history.replaceState(null, '', newUrl)
-            }
-            break
+  // Memoizar las secciones para evitar recrear el array
+  const sections = useMemo(() => ["home", "menu", "galeria", "opiniones", "ubicacion", "pedir"], [])
+
+  // Optimizar función de scroll con useCallback y throttling
+  const setInitialActiveSection = useCallback(() => {
+    const scrollPosition = window.scrollY + 100 // Add offset for header height
+    
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const element = document.getElementById(sections[i])
+      if (element) {
+        const elementTop = element.offsetTop
+        if (scrollPosition >= elementTop) {
+          setActiveSection(sections[i])
+          
+          // Update URL to reflect current section
+          const newUrl = `#${sections[i]}`
+          if (window.location.hash !== newUrl) {
+            window.history.replaceState(null, '', newUrl)
           }
+          break
         }
       }
     }
+  }, [sections])
 
+  // Throttle scroll listener para mejor rendimiento
+  const throttledSetActiveSection = useThrottle(setInitialActiveSection, 150)
+  
+  // Usar ref para mantener una referencia estable a la función throttled
+  const throttledRef = useRef(throttledSetActiveSection)
+  throttledRef.current = throttledSetActiveSection
+
+  useEffect(() => {
     // Call once on mount
     setInitialActiveSection()
     
-    // Also call on scroll to handle cases where user scrolls before observer is set up
-    window.addEventListener('scroll', setInitialActiveSection)
+    // Función wrapper que usa la ref para acceder a la versión más reciente
+    const handleScroll = () => {
+      throttledRef.current()
+    }
+    
+    // Throttled scroll listener
+    window.addEventListener('scroll', handleScroll)
     
     return () => {
-      window.removeEventListener('scroll', setInitialActiveSection)
+      window.removeEventListener('scroll', handleScroll)
     }
-  }, [])
+  }, [setInitialActiveSection]) // Solo setInitialActiveSection porque está memoizado y es estable
 
   useEffect(() => {
     const sections = ["home", "menu", "galeria", "opiniones", "ubicacion", "pedir"]

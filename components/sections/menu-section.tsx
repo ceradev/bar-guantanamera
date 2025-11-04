@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Download, Star, Wheat, Milk, Egg, Fish, Nut, Bean } from "lucide-react"
 import Image from "next/image"
 import { motion, useInView } from "framer-motion"
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo, useCallback, memo } from "react"
 import menuData from "@/data/menu-data.json"
 import type { MenuData, MenuItem } from "@/types/menu"
 // import GlobalSearch from "./global-search"
@@ -108,16 +108,16 @@ export default function MenuSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [activeTab, setActiveTab] = useState("pollos")
 
-  const handleDownloadMenu = () => {
+  const handleDownloadMenu = useCallback(() => {
     const link = document.createElement("a")
     link.href = "/docs/menu-guantanamera.pdf"
     link.download = "Menu-Guantanamera.pdf"
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-  }
+  }, [])
 
-  const renderAllergenIcons = (allergens: string[]) => {
+  const renderAllergenIcons = useCallback((allergens: string[]) => {
     return allergens.map((allergen) => {
       const IconComponent = allergenIcons[allergen as keyof typeof allergenIcons]
       return (
@@ -130,9 +130,9 @@ export default function MenuSection() {
         </div>
       )
     })
-  }
+  }, [])
 
-  const renderMenuItem = (item: MenuItem, index: number) => (
+  const renderMenuItem = useCallback((item: MenuItem, index: number) => (
     <motion.div key={item.name} variants={itemVariants}>
       <Card className="group overflow-hidden rounded-2xl border-0 bg-white shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-2 h-full">
         <CardHeader className="p-0 relative">
@@ -174,7 +174,7 @@ export default function MenuSection() {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  ), [renderAllergenIcons])
 
   return (
     <motion.section 

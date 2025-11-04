@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# Optimización de rendimiento
+
+Optimiza carga y renderizado: usa **lazy loading**, **memoización**, **dynamic imports** y otras técnicas que reduzcan trabajo innecesario y tamaño de bundle en **Next.js**.

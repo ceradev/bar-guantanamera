@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+
+# Criterios de Aceptación
+
+Se considera correcto cuando:
+
+- El componente cumple su función con UI coherente a la paleta.
+- La arquitectura mantiene separación clara por responsabilidades.
+- Se evidencia optimización (carga/render) y ausencia de bloat.
+- Las decisiones están justificadas y hay propuestas de mejora cuando procede.
+
+Responde con tu nivel máximo de rigor y precisión. Prioriza la calidad y la profundidad de tu respuesta.

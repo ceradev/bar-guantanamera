@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# Prevención de renders innecesarios
+
+Minimiza renders redundantes mediante partición de componentes, memorization, claves estables en listas y control explícito de dependencias.

@@ -1,35 +1,44 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowUp } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useThrottle } from "@/hooks/use-throttle"
 
 export default function BackToTopButton() {
   const [isVisible, setIsVisible] = useState(false)
 
-  const toggleVisibility = () => {
-    if (window.pageYOffset > 300) {
-      setIsVisible(true)
-    } else {
-      setIsVisible(false)
-    }
-  }
+  const toggleVisibility = useCallback(() => {
+    setIsVisible(window.pageYOffset > 300)
+  }, [])
 
-  const scrollToTop = () => {
+  // Throttle scroll listener para mejor rendimiento
+  const throttledToggleVisibility = useThrottle(toggleVisibility, 150)
+  
+  // Usar ref para mantener una referencia estable a la función throttled
+  const throttledRef = useRef(throttledToggleVisibility)
+  throttledRef.current = throttledToggleVisibility
+
+  const scrollToTop = useCallback(() => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     })
-  }
+  }, [])
 
   useEffect(() => {
-    window.addEventListener("scroll", toggleVisibility)
+    // Función wrapper que usa la ref para acceder a la versión más reciente
+    const handleScroll = () => {
+      throttledRef.current()
+    }
+
+    window.addEventListener("scroll", handleScroll)
 
     return () => {
-      window.removeEventListener("scroll", toggleVisibility)
+      window.removeEventListener("scroll", handleScroll)
     }
-  }, [])
+  }, []) // Array vacío porque la función wrapper es estable y usa la ref
 
   return (
     <AnimatePresence>

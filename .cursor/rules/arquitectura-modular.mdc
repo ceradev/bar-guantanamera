@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+# Arquitectura modular
+
+Mantén una arquitectura **escalable y separada por responsabilidades**:
+
+- `/components` → componentes reutilizables
+- `/pages` → rutas y vistas
+- `/hooks` → hooks personalizados
+- `/styles` → estilos globales/Tailwind
+- `/utils` → helpers/funciones puras
+- entre otros...  
+Cada componente en su propio archivo, con lógica y estilos encapsulados.

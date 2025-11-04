@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+---
+
+# Entrega y Documentación Breve
+
+En cada solicitud de diseño/componente, entrega:
+
+- Código **limpio, modular y optimizado**.
+- Solo contenido esencial (sin placeholders excesivos).
+- Conformidad con la estructura de carpetas y convenciones.
+- **Explicación breve** de decisiones (diseño/arquitectura) y su impacto en rendimiento/mantenibilidad.
+- **Sugerencias** de mejora visual o estructural cuando apliquen.

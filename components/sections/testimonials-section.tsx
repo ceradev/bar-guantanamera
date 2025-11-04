@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, Quote, Filter, ChevronDown, User, Calendar, ThumbsUp, ExternalLink } from "lucide-react"
 import { motion, easeOut, useInView } from "framer-motion"
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo, useCallback, memo } from "react"
 import testimonialsData from "@/data/testimonials-data.json"
 import { Testimonial, TestimonialStats } from "@/types/testimonials"
 import { getReviewUrl, getPlaceUrl } from "@/lib/google-maps"
@@ -44,7 +44,7 @@ const cardVariants = {
   },
 }
 
-const StarRating = ({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
+const StarRating = memo(({ rating, size = "w-4 h-4" }: { rating: number; size?: string }) => (
   <div className="flex items-center gap-1">
     {[...Array(5)].map((_, i) => (
       <Star
@@ -55,7 +55,7 @@ const StarRating = ({ rating, size = "w-4 h-4" }: { rating: number; size?: strin
       />
     ))}
   </div>
-)
+))
 
 export default function TestimonialsSection() {
   const ref = useRef(null)
@@ -65,20 +65,22 @@ export default function TestimonialsSection() {
   const [showFilters, setShowFilters] = useState(false)
   const [visibleCount, setVisibleCount] = useState(6)
 
-  const filteredTestimonials = testimonials.filter((testimonial) => {
-    const categoryMatch = selectedCategory === "Todas" || testimonial.category === selectedCategory
-    const ratingMatch = selectedRating === "all" || testimonial.rating === Number(selectedRating)
-    return categoryMatch && ratingMatch
-  })
+  const filteredTestimonials = useMemo(() => {
+    return testimonials.filter((testimonial) => {
+      const categoryMatch = selectedCategory === "Todas" || testimonial.category === selectedCategory
+      const ratingMatch = selectedRating === "all" || testimonial.rating === Number(selectedRating)
+      return categoryMatch && ratingMatch
+    })
+  }, [testimonials, selectedCategory, selectedRating])
 
   // Estadísticas de la base de datos local
   const { averageRating, totalReviews } = stats
   const googleMapsUrl = getPlaceUrl()
   const reviewUrl = getReviewUrl()
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     setVisibleCount((prev) => Math.min(prev + 3, filteredTestimonials.length))
-  }
+  }, [filteredTestimonials.length])
 
   return (
     <section id="opiniones" className="w-full scroll-mt-16 bg-white py-20 md:py-28" ref={ref}>

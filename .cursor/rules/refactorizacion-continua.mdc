@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# Refactorización continua
+
+Refactoriza de forma sistemática: elimina duplicación, extrae utilidades y componentes, y mantén el código preparado para escalar.

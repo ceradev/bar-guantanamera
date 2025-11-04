@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+# Animación responsable
+
+Emplea **Framer Motion** con moderación: usa animaciones solo si refuerzan la experiencia (navegación, estados, feedback), evitando efectos superfluos o distractores.
