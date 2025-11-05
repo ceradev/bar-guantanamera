@@ -44,7 +44,7 @@ export default function BackToTopButton() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed bottom-5 right-5 z-50"
+          className="fixed bottom-8 md:bottom-6 right-6 z-50"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -57,7 +57,7 @@ export default function BackToTopButton() {
             className="h-12 w-12 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             aria-label="Volver arriba"
           >
-            <ArrowUp className="h-6 w-6" />
+            <ArrowUp className="h-5 w-5" />
           </Button>
         </motion.div>
       )}

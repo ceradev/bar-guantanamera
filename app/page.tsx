@@ -35,10 +35,6 @@ const FloatingCallButton = dynamic(() => import("@/components/common/floating-ca
   ssr: false,
 })
 
-const FloatingCart = dynamic(() => import("@/components/cart/floating-cart"), {
-  ssr: false,
-})
-
 const CookieBanner = dynamic(() => import("@/components/common/cookie-banner"), {
   ssr: false,
 })
@@ -60,7 +56,6 @@ export default function GuantanameraPage() {
       <SiteFooter />
       <BackToTopButton />
       <FloatingCallButton />
-      <FloatingCart />
       <CookieBanner />
     </div>
   )

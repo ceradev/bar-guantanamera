@@ -33,7 +33,7 @@ export default function FloatingCallButton() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed bottom-20 right-4 z-50"
+          className="fixed bottom-20 right-6 z-50"
           initial={{ opacity: 0, scale: 0.8, x: 100 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           exit={{ opacity: 0, scale: 0.8, x: 100 }}
@@ -70,7 +70,7 @@ export default function FloatingCallButton() {
 
             <Button
               onClick={handleCall}
-              className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-green-600 text-white shadow-2xl hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 relative overflow-hidden"
+              className="h-12 w-12 rounded-full bg-green-600 text-white shadow-2xl hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 relative overflow-hidden"
               aria-label="Llamar al restaurante"
             >
               {/* Ripple effect background */}
@@ -98,7 +98,7 @@ export default function FloatingCallButton() {
                   ease: "easeInOut",
                 }}
               >
-                <Phone className="h-5 w-5 md:h-6 md:w-6 relative z-10" />
+                <Phone className="h-5 w-5 relative z-10" />
               </motion.div>
             </Button>
           </motion.div>

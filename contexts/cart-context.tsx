@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react"
-import type { CartItem, CartContextType } from "@/types/cart"
+import type { CartItem, CartContextType, DeliveryType, DeliveryLocation } from "@/types/cart"
 
 // Configuración del carrito (lista para implementar)
 const CART_CONFIG = {
@@ -19,6 +19,7 @@ interface CartProviderProps {
 
 export function CartProvider({ children }: CartProviderProps) {
   const [items, setItems] = useState<CartItem[]>([])
+  const [deliveryLocation, setDeliveryLocation] = useState<DeliveryLocation | null>(null)
 
   // Función helper para parsear precio string a número
   const parsePrice = useCallback((priceString: string): number => {
@@ -64,6 +65,7 @@ export function CartProvider({ children }: CartProviderProps) {
   // Limpiar carrito
   const clearCart = useCallback(() => {
     setItems([])
+    setDeliveryLocation(null)
   }, [])
 
   // Calcular total de items
@@ -84,13 +86,34 @@ export function CartProvider({ children }: CartProviderProps) {
 
   // Calcular tarifa de envío
   const getDeliveryFee = useCallback(() => {
-    const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
-    // Si el subtotal supera el umbral, envío gratis
-    if (subtotal >= CART_CONFIG.freeDeliveryThreshold) {
-      return 0
+    // Si todos los items son pickup, no hay costo de envío
+    const hasPickupItems = items.some(item => item.deliveryType === "pickup")
+    const hasDeliveryItems = items.some(item => item.deliveryType === "delivery")
+    
+    // Si hay items de entrega, calcular envío
+    if (hasDeliveryItems) {
+      const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
+      // Si el subtotal supera el umbral, envío gratis
+      if (subtotal >= CART_CONFIG.freeDeliveryThreshold) {
+        return 0
+      }
+      return CART_CONFIG.deliveryFee
     }
-    return CART_CONFIG.deliveryFee
+    
+    // Si solo hay pickup, no hay costo de envío
+    return 0
   }, [items])
+
+  // Actualizar tipo de entrega de todos los items del carrito
+  const updateCartDeliveryType = useCallback((deliveryType: DeliveryType, pickupTime?: string) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => ({
+        ...item,
+        deliveryType,
+        pickupTime: deliveryType === "pickup" ? pickupTime : undefined,
+      }))
+    )
+  }, [])
 
   // Calcular precio total (subtotal + impuestos + envío)
   const getTotalPrice = useCallback(() => {
@@ -99,6 +122,11 @@ export function CartProvider({ children }: CartProviderProps) {
     const delivery = getDeliveryFee()
     return subtotal + tax + delivery
   }, [getSubtotal, getTax, getDeliveryFee])
+
+  // Guardar ubicación de entrega
+  const setDeliveryLocationData = useCallback((location: DeliveryLocation | null) => {
+    setDeliveryLocation(location)
+  }, [])
 
   // Memoizar el valor del contexto para evitar renders innecesarios
   const value = useMemo<CartContextType>(
@@ -113,8 +141,11 @@ export function CartProvider({ children }: CartProviderProps) {
       getSubtotal,
       getTax,
       getDeliveryFee,
+      updateCartDeliveryType,
+      deliveryLocation,
+      setDeliveryLocation: setDeliveryLocationData,
     }),
-    [items, addItem, removeItem, updateQuantity, clearCart, getTotalItems, getTotalPrice, getSubtotal, getTax, getDeliveryFee]
+    [items, addItem, removeItem, updateQuantity, clearCart, getTotalItems, getTotalPrice, getSubtotal, getTax, getDeliveryFee, updateCartDeliveryType, deliveryLocation, setDeliveryLocationData]
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

@@ -138,6 +138,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
     const itemId = finalName
 
     // Agregar la cantidad seleccionada llamando addItem múltiples veces
+    // Los productos se añaden sin tipo de entrega, se seleccionará en el carrito
     for (let i = 0; i < quantity; i++) {
       addItem({
         id: itemId,
@@ -149,7 +150,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
       })
     }
 
-    // Cerrar modal después de agregar
+    // Cerrar modal de producto
     onClose()
   }, [product, quantity, selectedOption, hasMultipleOptions, addItem, onClose])
 
@@ -158,28 +159,29 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
   const currentQuantity = items.find((item) => item.name === (hasMultipleOptions && selectedOption ? selectedOption : product.name))?.quantity || 0
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay */}
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
-            variants={overlayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={onClose}
-          />
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+              variants={overlayVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={onClose}
+            />
 
-          {/* Modal */}
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            variants={modalVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={(e) => e.stopPropagation()}
-          >
+            {/* Modal */}
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
               {/* Close Button */}
               <button
@@ -334,6 +336,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
         </>
       )}
     </AnimatePresence>
+  </>
   )
 }
 
