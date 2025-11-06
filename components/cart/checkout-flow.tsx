@@ -17,12 +17,18 @@ import { Button } from "@/components/ui/button"
 import { useCart } from "@/hooks/use-cart"
 import LocationSelectionModal from "./location-selection-modal"
 import TrackingMapModal from "./tracking-map-modal"
-import OrderConfirmationModal from "./order-confirmation-modal"
 import type { DeliveryLocation } from "@/types/cart"
 
 interface CheckoutFlowProps {
   readonly isOpen: boolean
   readonly onClose: () => void
+  readonly onOrderConfirmed?: (data: {
+    deliveryType: "pickup" | "delivery"
+    pickupTime?: string
+    orderTotal: number
+    paymentMethod: PaymentMethod
+    deliveryLocation?: DeliveryLocation
+  }) => void
 }
 
 type PaymentMethod = "card" | "paypal" | "cash"
@@ -64,12 +70,11 @@ const overlayVariants = {
   exit: { opacity: 0 },
 }
 
-export default function CheckoutFlow({ isOpen, onClose }: CheckoutFlowProps) {
+export default function CheckoutFlow({ isOpen, onClose, onOrderConfirmed }: CheckoutFlowProps) {
   const { getSubtotal, getTax, getDeliveryFee, items, clearCart, deliveryLocation: savedDeliveryLocation, setDeliveryLocation } = useCart()
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showTrackingModal, setShowTrackingModal] = useState(false)
-  const [showOrderConfirmation, setShowOrderConfirmation] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(null)
   const [deliveryLocation, setDeliveryLocationLocal] = useState<DeliveryLocation | null>(null)
 
@@ -97,10 +102,16 @@ export default function CheckoutFlow({ isOpen, onClose }: CheckoutFlowProps) {
     const location = deliveryLocation || savedDeliveryLocation
     return location && location.zone !== "out-of-range" ? DELIVERY_ZONES[location.zone]?.fee || 0 : 0
   }, [deliveryLocation, savedDeliveryLocation])
+  
   const total = subtotal + tax + (deliveryType === "delivery" ? baseDeliveryFee : deliveryFee)
 
-  // Resetear estados cuando se abre el modal
+  // Resetear estados cuando se abre el modal (solo al inicio)
   useEffect(() => {
+    // NUNCA resetear si ya hay modales de tracking abiertos
+    if (showTrackingModal) {
+      return
+    }
+    
     if (isOpen) {
       // Si es pickup, saltar directamente al modal de pago
       if (deliveryType === "pickup") {
@@ -119,10 +130,13 @@ export default function CheckoutFlow({ isOpen, onClose }: CheckoutFlowProps) {
         }
       }
       setShowTrackingModal(false)
-      setShowOrderConfirmation(false)
       setSelectedPayment(null)
+    } else {
+      // Solo resetear cuando se cierra completamente
+      setShowPaymentModal(false)
+      setShowTrackingModal(false)
     }
-  }, [isOpen, deliveryType, savedDeliveryLocation])
+  }, [isOpen, deliveryType, savedDeliveryLocation, showTrackingModal])
 
 
   const handleLocationConfirm = useCallback((location: DeliveryLocation) => {
@@ -144,17 +158,36 @@ export default function CheckoutFlow({ isOpen, onClose }: CheckoutFlowProps) {
     const finalLocation = deliveryLocation || savedDeliveryLocation
     if (deliveryType === "delivery" && !finalLocation) return
 
+    // Guardar datos antes de limpiar el carrito
+    const finalPickupTime = deliveryType === "pickup" ? pickupTime : undefined
+    
+    // Cerrar el modal de pago
     setShowPaymentModal(false)
     
-    // Si es recogida, mostrar confirmación en lugar de tracking
-    if (deliveryType === "pickup") {
-      setShowOrderConfirmation(true)
-      // Limpiar carrito después de confirmar
-      clearCart()
-    } else {
-      setShowTrackingModal(true)
+    // Limpiar carrito ANTES de notificar (para que el callback tenga datos limpios)
+    clearCart()
+    
+    // Notificar al componente padre con los datos de confirmación
+    if (onOrderConfirmed) {
+      onOrderConfirmed({
+        deliveryType,
+        pickupTime: finalPickupTime,
+        orderTotal: total,
+        paymentMethod: selectedPayment,
+        deliveryLocation: finalLocation || undefined,
+      })
     }
-  }, [selectedPayment, deliveryLocation, savedDeliveryLocation, deliveryType, clearCart])
+    
+    // Si es delivery, mostrar tracking modal
+    if (deliveryType === "delivery") {
+      setShowTrackingModal(true)
+    } else {
+      // Si es pickup, cerrar el CheckoutFlow (el modal de confirmación se maneja en el padre)
+      setTimeout(() => {
+        onClose()
+      }, 100)
+    }
+  }, [selectedPayment, deliveryLocation, savedDeliveryLocation, deliveryType, clearCart, pickupTime, total, onOrderConfirmed, onClose])
 
   const handleCloseTracking = useCallback(() => {
     setShowTrackingModal(false)
@@ -162,17 +195,20 @@ export default function CheckoutFlow({ isOpen, onClose }: CheckoutFlowProps) {
     onClose()
   }, [onClose, clearCart])
 
-  const handleCloseOrderConfirmation = useCallback(() => {
-    setShowOrderConfirmation(false)
-    onClose()
-  }, [onClose])
+
 
   const handleClosePayment = useCallback(() => {
     setShowPaymentModal(false)
-    onClose()
-  }, [onClose])
+    // Solo cerrar el CheckoutFlow si no hay modales abiertos
+    if (!showTrackingModal) {
+      onClose()
+    }
+  }, [onClose, showTrackingModal])
 
-  if (!isOpen) return null
+  // Mantener el componente abierto si hay modales de tracking o confirmación abiertos
+  const shouldRender = isOpen || showTrackingModal
+  
+  if (!shouldRender) return null
 
   if (!globalThis.window) return null
 
@@ -398,14 +434,6 @@ export default function CheckoutFlow({ isOpen, onClose }: CheckoutFlowProps) {
         deliveryLocation={deliveryLocation || savedDeliveryLocation || undefined}
       />
 
-      {/* Order Confirmation Modal (solo para recogida) */}
-      <OrderConfirmationModal
-        isOpen={showOrderConfirmation}
-        onClose={handleCloseOrderConfirmation}
-        pickupTime={pickupTime}
-        orderTotal={total}
-        paymentMethod={selectedPayment}
-      />
     </>
   )
 }

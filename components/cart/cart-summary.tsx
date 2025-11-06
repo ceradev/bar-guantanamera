@@ -9,7 +9,8 @@ import { useCart } from "@/hooks/use-cart"
 import CheckoutFlow from "@/components/cart/checkout-flow"
 import LocationSelectionModal from "./location-selection-modal"
 import PickupTimeModal from "./pickup-time-modal"
-import type { DeliveryType, DeliveryLocation } from "@/types/cart"
+import OrderConfirmationModal from "./order-confirmation-modal"
+import type { DeliveryLocation } from "@/types/cart"
 
 interface CartSummaryProps {
   readonly onCheckout?: () => void
@@ -21,6 +22,12 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [showPickupTimeModal, setShowPickupTimeModal] = useState(false)
+  const [showOrderConfirmation, setShowOrderConfirmation] = useState(false)
+  const [orderConfirmationData, setOrderConfirmationData] = useState<{
+    pickupTime?: string
+    orderTotal: number
+    paymentMethod: "card" | "paypal" | "cash" | null
+  } | null>(null)
 
   // Determinar el tipo de entrega actual
   const currentDeliveryType = useMemo(() => {
@@ -246,7 +253,22 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
       </div>
 
       {/* Checkout Flow Modal */}
-      <CheckoutFlow isOpen={isCheckoutOpen} onClose={() => setIsCheckoutOpen(false)} />
+      <CheckoutFlow
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        onOrderConfirmed={(data) => {
+          // Guardar datos de confirmación
+          setOrderConfirmationData({
+            pickupTime: data.pickupTime,
+            orderTotal: data.orderTotal,
+            paymentMethod: data.paymentMethod,
+          })
+          // Cerrar checkout flow
+          setIsCheckoutOpen(false)
+          // Mostrar modal de confirmación (independiente del carrito)
+          setShowOrderConfirmation(true)
+        }}
+      />
 
       {/* Location Selection Modal (para entrega a domicilio) */}
       <LocationSelectionModal
@@ -262,6 +284,20 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
         onConfirm={handlePickupTimeConfirm}
         currentPickupTime={pickupTime}
       />
+
+      {/* Order Confirmation Modal (independiente del carrito) */}
+      {orderConfirmationData && (
+        <OrderConfirmationModal
+          isOpen={showOrderConfirmation}
+          onClose={() => {
+            setShowOrderConfirmation(false)
+            setOrderConfirmationData(null)
+          }}
+          pickupTime={orderConfirmationData.pickupTime || ""}
+          orderTotal={orderConfirmationData.orderTotal}
+          paymentMethod={orderConfirmationData.paymentMethod}
+        />
+      )}
     </>
   )
 }

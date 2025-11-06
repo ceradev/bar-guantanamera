@@ -2,15 +2,17 @@
 
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, CheckCircle2, Store, Clock, Package, CreditCard, Wallet, Banknote } from "lucide-react"
+import { X, CheckCircle2, Store, Clock, Package, CreditCard, Wallet, Banknote, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
+type PaymentMethod = "card" | "paypal" | "cash" | null
 
 interface OrderConfirmationModalProps {
   isOpen: boolean
   onClose: () => void
   pickupTime: string
   orderTotal: number
-  paymentMethod: "card" | "paypal" | "cash" | null
+  paymentMethod: PaymentMethod
 }
 
 const modalVariants = {
@@ -48,7 +50,7 @@ const successIconVariants = {
     scale: 1,
     rotate: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 200,
       damping: 15,
       delay: 0.2,
@@ -56,7 +58,7 @@ const successIconVariants = {
   },
 }
 
-const getPaymentIcon = (method: "card" | "paypal" | "cash" | null) => {
+const getPaymentIcon = (method: PaymentMethod) => {
   switch (method) {
     case "card":
       return CreditCard
@@ -69,7 +71,7 @@ const getPaymentIcon = (method: "card" | "paypal" | "cash" | null) => {
   }
 }
 
-const getPaymentLabel = (method: "card" | "paypal" | "cash" | null) => {
+const getPaymentLabel = (method: PaymentMethod) => {
   switch (method) {
     case "card":
       return "Tarjeta"
@@ -89,7 +91,9 @@ export default function OrderConfirmationModal({
   orderTotal,
   paymentMethod,
 }: OrderConfirmationModalProps) {
-  if (!isOpen) return null
+  if (!isOpen) {
+    return null
+  }
   if (!globalThis.window) return null
 
   const PaymentIcon = getPaymentIcon(paymentMethod)
@@ -116,10 +120,9 @@ export default function OrderConfirmationModal({
             animate="visible"
             exit="exit"
           >
-            <div
-              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto"
-              role="dialog"
-              aria-modal="true"
+            <dialog
+              open={isOpen}
+              className="relative w-full max-w-md max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto border-0 p-0 backdrop:bg-transparent"
               aria-labelledby="confirmation-modal-title"
             >
               {/* Close Button */}
@@ -132,7 +135,7 @@ export default function OrderConfirmationModal({
               </button>
 
               {/* Content */}
-              <div className="px-8 pt-12 pb-8 text-center">
+              <div className="flex-1 overflow-y-auto px-8 pt-12 pb-8 text-center">
                 {/* Success Icon */}
                 <motion.div
                   className="flex justify-center mb-6"
@@ -166,12 +169,24 @@ export default function OrderConfirmationModal({
                   Tu pedido ha sido procesado correctamente y está siendo preparado.
                 </motion.p>
 
+                {/* Email Confirmation - Always visible, no animation dependency */}
+                <div className="bg-green-200 border-4 border-green-700 rounded-xl p-6 mb-6 shadow-2xl">
+                  <div className="flex items-center justify-center gap-4 mb-3">
+                    <Mail className="w-8 h-8 text-green-700" />
+                    <p className="text-xl font-bold text-gray-900">Correo de confirmación enviado</p>
+                  </div>
+                  <p className="text-base text-gray-800 leading-relaxed font-medium text-center">
+                    Hemos enviado un correo electrónico con los detalles de tu pedido. 
+                    Revisa tu bandeja de entrada (y la carpeta de spam si no lo encuentras).
+                  </p>
+                </div>
+
                 {/* Order Details */}
                 <motion.div
                   className="bg-gray-50 rounded-2xl p-6 space-y-4 mb-6"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: 0.6 }}
                 >
                   {/* Pickup Info */}
                   <div className="flex items-center justify-center gap-3">
@@ -212,7 +227,7 @@ export default function OrderConfirmationModal({
                   className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
+                  transition={{ delay: 0.7 }}
                 >
                   <div className="flex items-start gap-3">
                     <Package className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -230,7 +245,7 @@ export default function OrderConfirmationModal({
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
+                  transition={{ delay: 0.8 }}
                 >
                   <Button
                     onClick={onClose}
@@ -241,7 +256,7 @@ export default function OrderConfirmationModal({
                   </Button>
                 </motion.div>
               </div>
-            </div>
+            </dialog>
           </motion.div>
         </>
       )}
