@@ -13,6 +13,11 @@ interface OrderConfirmationModalProps {
   pickupTime: string
   orderTotal: number
   paymentMethod: PaymentMethod
+  customerInfo?: {
+    firstName: string
+    lastName: string
+    email: string
+  }
 }
 
 const modalVariants = {
@@ -90,6 +95,7 @@ export default function OrderConfirmationModal({
   pickupTime,
   orderTotal,
   paymentMethod,
+  customerInfo,
 }: OrderConfirmationModalProps) {
   if (!isOpen) {
     return null
@@ -122,7 +128,7 @@ export default function OrderConfirmationModal({
           >
             <dialog
               open={isOpen}
-              className="relative w-full max-w-md max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto border-0 p-0 backdrop:bg-transparent"
+              className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col pointer-events-auto border-0 p-0 backdrop:bg-transparent"
               aria-labelledby="confirmation-modal-title"
             >
               {/* Close Button */}
@@ -181,46 +187,74 @@ export default function OrderConfirmationModal({
                   </p>
                 </div>
 
-                {/* Order Details */}
-                <motion.div
-                  className="bg-gray-50 rounded-2xl p-6 space-y-4 mb-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  {/* Pickup Info */}
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Store className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm text-gray-600">Recogida en el local</p>
-                      {pickupTime && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <Clock className="w-4 h-4 text-blue-600" />
-                          <span className="font-semibold text-gray-900">{pickupTime}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                 {/* Order Details */}
+                 <motion.div
+                   className="bg-gray-50 rounded-2xl p-6 space-y-4 mb-6"
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.6 }}
+                 >
+                   {/* Pickup Info */}
+                   <div className="space-y-4">
+                     <div className="flex items-center justify-center gap-3">
+                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                         <Store className="w-5 h-5 text-blue-600" />
+                       </div>
+                       <div className="text-left">
+                         <p className="text-sm text-gray-600">Recogida en el local</p>
+                         {pickupTime && (
+                           <div className="flex items-center gap-2 mt-1">
+                             <Clock className="w-4 h-4 text-blue-600" />
+                             <span className="font-semibold text-gray-900">{pickupTime}</span>
+                           </div>
+                         )}
+                       </div>
+                     </div>
 
-                  {/* Payment Method */}
-                  <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
-                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                      <PaymentIcon className="w-5 h-5 text-gray-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm text-gray-600">Método de pago</p>
-                      <p className="font-semibold text-gray-900">{getPaymentLabel(paymentMethod)}</p>
-                    </div>
-                  </div>
+                     {/* Información del cliente (solo lectura) */}
+                     {customerInfo && (
+                       <div className="pt-4 border-t border-gray-200">
+                         <div className="flex items-center gap-2 mb-3">
+                           <Mail className="w-4 h-4 text-blue-600" />
+                           <p className="text-sm font-semibold text-gray-900">Información de contacto</p>
+                         </div>
+                         <div className="bg-white rounded-xl p-4 space-y-2 border border-gray-200">
+                           <div className="flex items-center justify-between">
+                             <span className="text-xs text-gray-600">Nombre:</span>
+                             <span className="text-sm font-semibold text-gray-900">{customerInfo.firstName}</span>
+                           </div>
+                           <div className="flex items-center justify-between">
+                             <span className="text-xs text-gray-600">Apellidos:</span>
+                             <span className="text-sm font-semibold text-gray-900">{customerInfo.lastName}</span>
+                           </div>
+                           <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                             <span className="text-xs text-gray-600">Correo electrónico:</span>
+                             <span className="text-sm font-semibold text-gray-900">{customerInfo.email}</span>
+                           </div>
+                         </div>
+                       </div>
+                     )}
+                   </div>
 
-                  {/* Total */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                    <span className="text-lg font-bold text-gray-900">Total pagado</span>
-                    <span className="text-2xl font-bold text-red-600">{orderTotal.toFixed(2)}€</span>
-                  </div>
-                </motion.div>
+                   {/* Payment Method - Solo si hay método de pago (delivery) */}
+                   {paymentMethod && (
+                     <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
+                       <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                         <PaymentIcon className="w-5 h-5 text-gray-600" />
+                       </div>
+                       <div className="text-left">
+                         <p className="text-sm text-gray-600">Método de pago</p>
+                         <p className="font-semibold text-gray-900">{getPaymentLabel(paymentMethod)}</p>
+                       </div>
+                     </div>
+                   )}
+
+                   {/* Total */}
+                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                     <span className="text-lg font-bold text-gray-900">Total pagado</span>
+                     <span className="text-2xl font-bold text-red-600">{orderTotal.toFixed(2)}€</span>
+                   </div>
+                 </motion.div>
 
                 {/* Instructions */}
                 <motion.div

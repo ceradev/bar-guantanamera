@@ -152,7 +152,8 @@ export default function CheckoutFlow({ isOpen, onClose, onOrderConfirmed }: Chec
   }, [onClose])
 
   const handleConfirmOrder = useCallback(() => {
-    if (!selectedPayment) return
+    // Para delivery, necesitamos método de pago
+    if (deliveryType === "delivery" && !selectedPayment) return
     
     // Si es entrega, necesitamos ubicación (usar la guardada si no hay local)
     const finalLocation = deliveryLocation || savedDeliveryLocation
@@ -161,21 +162,35 @@ export default function CheckoutFlow({ isOpen, onClose, onOrderConfirmed }: Chec
     // Guardar datos antes de limpiar el carrito
     const finalPickupTime = deliveryType === "pickup" ? pickupTime : undefined
     
+    console.log("🔵 [CheckoutFlow] handleConfirmOrder llamado")
+    console.log("🔵 [CheckoutFlow] deliveryType:", deliveryType)
+    console.log("🔵 [CheckoutFlow] finalPickupTime:", finalPickupTime)
+    console.log("🔵 [CheckoutFlow] total:", total)
+    console.log("🔵 [CheckoutFlow] selectedPayment:", selectedPayment)
+    console.log("🔵 [CheckoutFlow] onOrderConfirmed existe?", !!onOrderConfirmed)
+    
     // Cerrar el modal de pago
     setShowPaymentModal(false)
     
-    // Limpiar carrito ANTES de notificar (para que el callback tenga datos limpios)
-    clearCart()
-    
     // Notificar al componente padre con los datos de confirmación
+    // NO limpiar el carrito aquí - se limpiará cuando el usuario cierre el modal de confirmación
     if (onOrderConfirmed) {
+      console.log("🟢 [CheckoutFlow] Llamando onOrderConfirmed con datos:", {
+        deliveryType,
+        pickupTime: finalPickupTime,
+        orderTotal: total,
+        paymentMethod: deliveryType === "pickup" ? null : selectedPayment, // Para pickup no hay método de pago
+        deliveryLocation: finalLocation || undefined,
+      })
       onOrderConfirmed({
         deliveryType,
         pickupTime: finalPickupTime,
         orderTotal: total,
-        paymentMethod: selectedPayment,
+        paymentMethod: deliveryType === "pickup" ? null : selectedPayment, // Para pickup no hay método de pago
         deliveryLocation: finalLocation || undefined,
       })
+      console.log("🟢 [CheckoutFlow] onOrderConfirmed llamado")
+      console.log("🟢 [CheckoutFlow] El carrito se limpiará cuando el usuario cierre el modal de confirmación")
     }
     
     // Si es delivery, mostrar tracking modal
@@ -183,7 +198,9 @@ export default function CheckoutFlow({ isOpen, onClose, onOrderConfirmed }: Chec
       setShowTrackingModal(true)
     } else {
       // Si es pickup, cerrar el CheckoutFlow (el modal de confirmación se maneja en el padre)
+      console.log("🟢 [CheckoutFlow] Es pickup, cerrando CheckoutFlow en 100ms")
       setTimeout(() => {
+        console.log("🟢 [CheckoutFlow] Ejecutando onClose()")
         onClose()
       }, 100)
     }
@@ -262,57 +279,61 @@ export default function CheckoutFlow({ isOpen, onClose, onOrderConfirmed }: Chec
                   {/* Header */}
                   <div className="px-8 pt-8 pb-6 border-b border-gray-200">
                     <h2 id="payment-modal-title" className="text-3xl font-bold text-gray-900 mb-2">Finalizar pedido</h2>
-                    <p className="text-gray-600">Selecciona tu método de pago</p>
+                    <p className="text-gray-600">
+                      {deliveryType === "pickup" ? "Confirma los detalles de tu pedido" : "Selecciona tu método de pago"}
+                    </p>
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
-                    {/* Payment Methods */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Método de pago</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {[
-                          { id: "card" as PaymentMethod, label: "Tarjeta", icon: CreditCard },
-                          { id: "paypal" as PaymentMethod, label: "PayPal", icon: Wallet },
-                          { id: "cash" as PaymentMethod, label: "Efectivo", icon: Banknote },
-                        ].map((method) => (
-                          <motion.button
-                            key={method.id}
-                            onClick={() => setSelectedPayment(method.id)}
-                            className={`relative p-6 rounded-2xl border-2 transition-all duration-300 ${
-                              selectedPayment === method.id
-                                ? "border-red-600 bg-red-50 shadow-lg"
-                                : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
-                            }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            {selectedPayment === method.id && (
-                              <motion.div
-                                className="absolute top-2 right-2 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                              >
-                                <CheckCircle2 className="w-4 h-4 text-white" />
-                              </motion.div>
-                            )}
-                            <method.icon
-                              className={`w-8 h-8 mb-3 ${
-                                selectedPayment === method.id ? "text-red-600" : "text-gray-600"
+                    {/* Payment Methods - Solo para delivery */}
+                    {deliveryType === "delivery" && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Método de pago</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {[
+                            { id: "card" as PaymentMethod, label: "Tarjeta", icon: CreditCard },
+                            { id: "paypal" as PaymentMethod, label: "PayPal", icon: Wallet },
+                            { id: "cash" as PaymentMethod, label: "Efectivo", icon: Banknote },
+                          ].map((method) => (
+                            <motion.button
+                              key={method.id}
+                              onClick={() => setSelectedPayment(method.id)}
+                              className={`relative p-6 rounded-2xl border-2 transition-all duration-300 ${
+                                selectedPayment === method.id
+                                  ? "border-red-600 bg-red-50 shadow-lg"
+                                  : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-md"
                               }`}
-                            />
-                            <p
-                              className={`font-semibold ${
-                                selectedPayment === method.id ? "text-red-600" : "text-gray-900"
-                              }`}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
                             >
-                              {method.label}
-                            </p>
-                          </motion.button>
-                        ))}
+                              {selectedPayment === method.id && (
+                                <motion.div
+                                  className="absolute top-2 right-2 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center"
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-white" />
+                                </motion.div>
+                              )}
+                              <method.icon
+                                className={`w-8 h-8 mb-3 ${
+                                  selectedPayment === method.id ? "text-red-600" : "text-gray-600"
+                                }`}
+                              />
+                              <p
+                                className={`font-semibold ${
+                                  selectedPayment === method.id ? "text-red-600" : "text-gray-900"
+                                }`}
+                              >
+                                {method.label}
+                              </p>
+                            </motion.button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Información de recogida (solo para pickup) */}
                     {deliveryType === "pickup" && (
@@ -409,7 +430,7 @@ export default function CheckoutFlow({ isOpen, onClose, onOrderConfirmed }: Chec
                   <div className="px-8 py-6 border-t border-gray-200 bg-gray-50">
                     <Button
                       onClick={handleConfirmOrder}
-                      disabled={!selectedPayment}
+                      disabled={deliveryType === "delivery" && !selectedPayment}
                       className="w-full bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       size="lg"
                     >

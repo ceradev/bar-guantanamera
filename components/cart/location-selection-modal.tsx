@@ -29,7 +29,7 @@ const DELIVERY_RANGES = {
 
 // Zonas bloqueadas simuladas (coordenadas aproximadas fuera de servicio)
 // Puedes agregar zonas específicas de San Isidro que no entreguen si es necesario
-const BLOCKED_AREAS = [
+const BLOCKED_AREAS: any[] = [
   // Ejemplo: agregar zonas bloqueadas específicas si es necesario
   // { lat: 28.1, lng: -16.5, radius: 0.5 },
 ]

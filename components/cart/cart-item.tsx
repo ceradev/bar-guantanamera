@@ -6,9 +6,12 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/hooks/use-cart"
 import type { CartItem } from "@/types/cart"
+import { useMemo } from "react"
+import menuData from "@/data/menu-data.json"
+import type { MenuData } from "@/types/menu"
 
 interface CartItemComponentProps {
-  item: CartItem
+  readonly item: CartItem
 }
 
 const itemVariants = {
@@ -31,6 +34,45 @@ const itemVariants = {
 
 export default function CartItemComponent({ item }: CartItemComponentProps) {
   const { updateQuantity, removeItem } = useCart()
+  const { comboMeals, bebidasYMojos } = menuData as MenuData
+
+  // Función para obtener el emoji según el tipo de producto
+  const getProductEmoji = useMemo(() => {
+    // Buscar si es un combo meal
+    const comboMeal = comboMeals.find(combo => combo.name === item.name)
+    if (comboMeal) {
+      return comboMeal.icon
+    }
+
+    // Buscar si es una bebida (incluyendo opciones múltiples)
+    const isBeverage = bebidasYMojos.bebidas.some(beverage => {
+      // Si la bebida tiene opciones múltiples, verificar si el nombre del item coincide con alguna opción
+      if (beverage.name.includes("|")) {
+        const regex = /\(([^)]+)\)\s*$/
+        const match = regex.exec(beverage.name)
+        const size = match ? match[1] : ""
+        const options = beverage.name.split("|").map(opt => {
+          let cleanOption = opt.trim()
+          cleanOption = cleanOption.replace(/\s*\([^)]+\)\s*$/, "")
+          return size && !cleanOption.includes(size) ? `${cleanOption} (${size})` : cleanOption
+        })
+        return options.includes(item.name)
+      }
+      return beverage.name === item.name
+    })
+    if (isBeverage) {
+      return "🍺"
+    }
+
+    // Buscar si es un mojo
+    const isMojo = bebidasYMojos.mojos.some(mojo => mojo.name === item.name)
+    if (isMojo) {
+      return "🥄"
+    }
+
+    // Por defecto, no retornar emoji (se mostrará placeholder)
+    return null
+  }, [item.name, comboMeals, bebidasYMojos])
 
   const handleDecrease = () => {
     if (item.quantity > 1) {
@@ -48,6 +90,38 @@ export default function CartItemComponent({ item }: CartItemComponentProps) {
     removeItem(item.id)
   }
 
+  const renderProductImage = () => {
+    if (item.image) {
+      return (
+        <Image
+          src={item.image}
+          alt={item.name}
+          fill
+          className="object-cover"
+        />
+      )
+    }
+
+    if (getProductEmoji) {
+      return (
+        <div className="w-full h-full flex items-center justify-center">
+          <span className="text-4xl md:text-5xl" aria-label={item.name}>
+            {getProductEmoji}
+          </span>
+        </div>
+      )
+    }
+
+    return (
+      <Image
+        src="/placeholder.svg"
+        alt={item.name}
+        fill
+        className="object-cover"
+      />
+    )
+  }
+
   return (
     <motion.div
       variants={itemVariants}
@@ -56,14 +130,9 @@ export default function CartItemComponent({ item }: CartItemComponentProps) {
       exit="exit"
       className="flex gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow"
     >
-      {/* Image */}
+      {/* Image or Emoji */}
       <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-        <Image
-          src={item.image || "/placeholder.svg"}
-          alt={item.name}
-          fill
-          className="object-cover"
-        />
+        {renderProductImage()}
       </div>
 
       {/* Content */}

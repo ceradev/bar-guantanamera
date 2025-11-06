@@ -3,14 +3,19 @@
 import { useState, useEffect, useCallback } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Clock, CheckCircle2 } from "lucide-react"
+import { X, Clock, CheckCircle2, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface PickupTimeModalProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: (pickupTime: string) => void
+  onConfirm: (pickupTime: string, customerInfo: { firstName: string; lastName: string; email: string }) => void
   currentPickupTime?: string
+  currentCustomerInfo?: {
+    firstName: string
+    lastName: string
+    email: string
+  }
 }
 
 const modalVariants = {
@@ -54,7 +59,7 @@ const BUSINESS_HOURS = {
   // Martes y Miércoles: Cerrado
 }
 
-// Generar horas disponibles para recogida (desde 1 hora después de la apertura hasta la hora de cierre)
+// Generar horas disponibles para recogida en tiempo real (desde ahora hasta la hora de cierre)
 const generateAvailableTimes = (): string[] => {
   const times: string[] = []
   const now = new Date()
@@ -68,33 +73,64 @@ const generateAvailableTimes = (): string[] => {
     return []
   }
   
-  // Obtener la hora de apertura y cierre
-  const openHour = todaySchedule.open
+  // Obtener la hora actual
+  const currentHour = now.getHours()
+  const currentMinute = now.getMinutes()
+  
+  // Obtener la hora de cierre
   const closeHour = todaySchedule.close
+  const closeMinute = 0
   
-  // Empezar 1 hora después de la apertura
-  const startHour = openHour + 1
-  const startMinute = 0
+  // Calcular la hora mínima de recogida: hora actual + 30 minutos (tiempo de preparación)
+  let minPickupHour = currentHour
+  let minPickupMinute = currentMinute + 30
   
-  // Usar la hora de cierre como límite máximo
-  const endHour = closeHour
-  const endMinute = 0
+  // Ajustar si los minutos pasan de 60
+  if (minPickupMinute >= 60) {
+    minPickupMinute -= 60
+    minPickupHour += 1
+  }
   
-  // Generar horas cada 30 minutos desde 1 hora después de la apertura hasta la hora de cierre
-  let currentHour = startHour
-  let currentMinute = startMinute
+  // Redondear hacia arriba a la próxima media hora
+  // Ejemplos:
+  // 14:20 + 30min = 14:50 → redondear a 15:00
+  // 14:35 + 30min = 15:05 → redondear a 15:30
+  // 14:00 + 30min = 14:30 → empezar desde 14:30
+  let startHour = minPickupHour
+  let startMinute = 0
+  
+  if (minPickupMinute === 0) {
+    // Ya está en punto, empezar desde ahí
+    startMinute = 0
+  } else if (minPickupMinute <= 30) {
+    // Entre :01 y :30, redondear a :30
+    startMinute = 30
+  } else {
+    // Entre :31 y :59, avanzar a la siguiente hora en punto
+    startHour = minPickupHour + 1
+    startMinute = 0
+  }
+  
+  // Si ya pasamos la hora de cierre, no hay horarios disponibles hoy
+  if (startHour > closeHour || (startHour === closeHour && startMinute > closeMinute)) {
+    return []
+  }
+  
+  // Generar horas cada 30 minutos desde ahora hasta la hora de cierre
+  let timeHour = startHour
+  let timeMinute = startMinute
   
   while (
-    currentHour < endHour || 
-    (currentHour === endHour && currentMinute <= endMinute)
+    timeHour < closeHour || 
+    (timeHour === closeHour && timeMinute <= closeMinute)
   ) {
-    const timeString = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`
+    const timeString = `${String(timeHour).padStart(2, "0")}:${String(timeMinute).padStart(2, "0")}`
     times.push(timeString)
     
-    currentMinute += 30
-    if (currentMinute >= 60) {
-      currentMinute = 0
-      currentHour++
+    timeMinute += 30
+    if (timeMinute >= 60) {
+      timeMinute = 0
+      timeHour++
     }
   }
   
@@ -106,16 +142,36 @@ export default function PickupTimeModal({
   onClose,
   onConfirm,
   currentPickupTime,
+  currentCustomerInfo,
 }: PickupTimeModalProps) {
   const [selectedTime, setSelectedTime] = useState<string>(currentPickupTime || "")
-  const [availableTimes] = useState<string[]>(generateAvailableTimes())
+  // Generar horarios en tiempo real cada vez que se abre el modal
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
+  
+  // Regenerar horarios cada vez que se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      const times = generateAvailableTimes()
+      setAvailableTimes(times)
+      // Si la hora seleccionada ya no está disponible, limpiarla
+      if (currentPickupTime && !times.includes(currentPickupTime)) {
+        setSelectedTime("")
+      }
+    }
+  }, [isOpen, currentPickupTime])
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
 
-  // Resetear cuando se abre el modal
+  // Resetear cuando se abre el modal (cargar valores existentes si hay)
   useEffect(() => {
     if (isOpen) {
       setSelectedTime(currentPickupTime || "")
+      setFirstName(currentCustomerInfo?.firstName || "")
+      setLastName(currentCustomerInfo?.lastName || "")
+      setEmail(currentCustomerInfo?.email || "")
     }
-  }, [isOpen, currentPickupTime])
+  }, [isOpen, currentPickupTime, currentCustomerInfo])
 
   // Cerrar con ESC
   useEffect(() => {
@@ -141,11 +197,18 @@ export default function PickupTimeModal({
   }, [isOpen])
 
   const handleConfirm = useCallback(() => {
-    if (selectedTime) {
-      onConfirm(selectedTime)
+    if (selectedTime && firstName.trim() && lastName.trim() && email.trim() && email.includes("@")) {
+      onConfirm(selectedTime, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+      })
       onClose()
     }
-  }, [selectedTime, onConfirm, onClose])
+  }, [selectedTime, firstName, lastName, email, onConfirm, onClose])
+
+  // Validar si todos los campos están completos
+  const isFormValid = selectedTime && firstName.trim() && lastName.trim() && email.trim() && email.includes("@")
 
   if (!isOpen) return null
   if (!globalThis.window) return null
@@ -259,6 +322,65 @@ export default function PickupTimeModal({
                     </div>
                   </motion.div>
                 )}
+
+                {/* Información del cliente */}
+                <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200 space-y-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Mail className="w-4 h-4 text-blue-600" />
+                    <h3 className="text-sm font-semibold text-gray-900">Información de contacto</h3>
+                  </div>
+                  
+                  {/* Nombre */}
+                  <div>
+                    <label htmlFor="pickup-firstname" className="block text-xs font-semibold text-gray-900 mb-1.5">
+                      Nombre <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      id="pickup-firstname"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Tu nombre"
+                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-200 transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Apellidos */}
+                  <div>
+                    <label htmlFor="pickup-lastname" className="block text-xs font-semibold text-gray-900 mb-1.5">
+                      Apellidos <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      id="pickup-lastname"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Tus apellidos"
+                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-200 transition-colors"
+                      required
+                    />
+                  </div>
+
+                  {/* Correo electrónico */}
+                  <div>
+                    <label htmlFor="pickup-email" className="block text-xs font-semibold text-gray-900 mb-1.5">
+                      Correo electrónico <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      id="pickup-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="tu@correo.com"
+                      className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-200 transition-colors"
+                      required
+                    />
+                    <p className="text-xs text-gray-600 mt-1.5">
+                      Te enviaremos un correo con los detalles de tu pedido
+                    </p>
+                  </div>
+                </div>
                 </div>
               </div>
 
@@ -266,15 +388,19 @@ export default function PickupTimeModal({
               <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
                 <Button
                   onClick={handleConfirm}
-                  disabled={!selectedTime}
+                  disabled={!isFormValid}
                   className="w-full bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   size="default"
                 >
                   Confirmar hora de recogida
                 </Button>
-                {!selectedTime && (
+                {!isFormValid && (
                   <p className="text-xs text-red-600 text-center mt-2">
-                    Por favor, selecciona una hora de recogida
+                    {!selectedTime 
+                      ? "Por favor, selecciona una hora de recogida"
+                      : !firstName.trim() || !lastName.trim() || !email.trim() || !email.includes("@")
+                      ? "Por favor, completa todos los campos obligatorios"
+                      : "Por favor, completa todos los campos"}
                   </p>
                 )}
               </div>

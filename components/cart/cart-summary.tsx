@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ShoppingBag, ArrowRight, Truck, Store, Clock, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
@@ -18,7 +18,7 @@ interface CartSummaryProps {
 }
 
 export default function CartSummary({ onCheckout, showViewCartButton = false }: CartSummaryProps) {
-  const { getSubtotal, getTax, getDeliveryFee, getTotalPrice, getTotalItems, items, updateCartDeliveryType, setDeliveryLocation } = useCart()
+  const { getSubtotal, getTax, getDeliveryFee, getTotalPrice, getTotalItems, items, updateCartDeliveryType, setDeliveryLocation, clearCart } = useCart()
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [showPickupTimeModal, setShowPickupTimeModal] = useState(false)
@@ -27,7 +27,43 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
     pickupTime?: string
     orderTotal: number
     paymentMethod: "card" | "paypal" | "cash" | null
+    customerInfo?: {
+      firstName: string
+      lastName: string
+      email: string
+    }
   } | null>(null)
+  // Usar ref para mantener los datos incluso durante re-renders
+  const orderConfirmationDataRef = useRef<{
+    pickupTime?: string
+    orderTotal: number
+    paymentMethod: "card" | "paypal" | "cash" | null
+    customerInfo?: {
+      firstName: string
+      lastName: string
+      email: string
+    }
+  } | null>(null)
+  // Guardar información del cliente cuando se confirma la hora
+  const [customerInfo, setCustomerInfo] = useState<{
+    firstName: string
+    lastName: string
+    email: string
+  } | null>(null)
+
+  // Debug: Log cuando cambian los estados
+  useEffect(() => {
+    console.log("🟣 [CartSummary] Estado actualizado - showOrderConfirmation:", showOrderConfirmation)
+    console.log("🟣 [CartSummary] Estado actualizado - orderConfirmationData:", orderConfirmationData)
+  }, [showOrderConfirmation, orderConfirmationData])
+
+  // Asegurar que cuando orderConfirmationData se establece, showOrderConfirmation también se establece
+  useEffect(() => {
+    if (orderConfirmationData && !showOrderConfirmation) {
+      console.log("🟣 [CartSummary] useEffect detectó orderConfirmationData pero showOrderConfirmation es false, estableciendo a true")
+      setShowOrderConfirmation(true)
+    }
+  }, [orderConfirmationData, showOrderConfirmation])
 
   // Determinar el tipo de entrega actual
   const currentDeliveryType = useMemo(() => {
@@ -60,8 +96,8 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
   }
 
   const handleDeliverySelect = useCallback(() => {
-    // Abrir modal de ubicación directamente
-    setShowLocationModal(true)
+    // Temporalmente desactivado - no hacer nada
+    // setShowLocationModal(true)
   }, [])
 
   const handlePickupSelect = useCallback(() => {
@@ -77,9 +113,12 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
     setShowLocationModal(false)
   }, [updateCartDeliveryType, setDeliveryLocation])
 
-  const handlePickupTimeConfirm = useCallback((pickupTime: string) => {
+  const handlePickupTimeConfirm = useCallback((pickupTime: string, customerInfoData: { firstName: string; lastName: string; email: string }) => {
     // Establecer tipo de entrega y hora cuando se confirma
     updateCartDeliveryType("pickup", pickupTime)
+    // Guardar la información del cliente para mostrarla en el modal de confirmación
+    setCustomerInfo(customerInfoData)
+    console.log("📧 [CartSummary] Información del cliente guardada:", customerInfoData)
     setShowPickupTimeModal(false)
   }, [updateCartDeliveryType])
 
@@ -91,33 +130,26 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-900">Tipo de entrega</h3>
             <div className="grid grid-cols-2 gap-2">
-              {/* Entrega a domicilio */}
+              {/* Entrega a domicilio - Temporalmente desactivado */}
               <motion.button
-                onClick={handleDeliverySelect}
-                className={`relative p-3 rounded-xl border-2 transition-all duration-200 text-left ${
-                  currentDeliveryType === "delivery"
-                    ? "border-red-600 bg-red-50 shadow-md"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                onClick={() => {}}
+                disabled
+                className="relative p-3 rounded-xl border-2 transition-all duration-200 text-left opacity-50 cursor-not-allowed border-gray-200 bg-gray-50"
+                whileHover={{}}
+                whileTap={{}}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Truck className={`w-4 h-4 ${currentDeliveryType === "delivery" ? "text-red-600" : "text-gray-600"}`} />
-                  <span className={`text-xs font-semibold ${currentDeliveryType === "delivery" ? "text-red-600" : "text-gray-900"}`}>
+                  <Truck className="w-4 h-4 text-gray-400" />
+                  <span className="text-xs font-semibold text-gray-400">
                     Entrega
                   </span>
-                  {currentDeliveryType === "delivery" && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="ml-auto"
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-red-600" />
-                    </motion.div>
-                  )}
                 </div>
-                <p className="text-xs text-gray-600">A domicilio</p>
+                <p className="text-xs text-gray-400">A domicilio</p>
+                <div className="absolute top-1 right-1">
+                  <span className="text-[8px] font-bold text-gray-400 bg-gray-200 px-1.5 py-0.5 rounded">
+                    Próximamente
+                  </span>
+                </div>
               </motion.button>
 
               {/* Recogida en el local */}
@@ -150,25 +182,52 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
               </motion.button>
             </div>
 
-            {/* Mostrar hora de recogida si es pickup */}
+            {/* Mostrar hora de recogida e información del cliente si es pickup */}
             {currentDeliveryType === "pickup" && pickupTime && (
               <motion.div
-                className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200"
+                className="space-y-2"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                <span className="text-xs text-gray-700">
-                  <span className="font-semibold">Hora de recogida:</span> {pickupTime}
-                </span>
+                <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                  <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-xs text-gray-700 flex-1">
+                    <span className="font-semibold">Hora de recogida:</span> {pickupTime}
+                  </span>
+                  <button
+                    onClick={() => setShowPickupTimeModal(true)}
+                    className="text-xs text-red-600 hover:text-red-700 font-semibold underline"
+                  >
+                    Editar
+                  </button>
+                </div>
+                {customerInfo && (
+                  <div className="p-2 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-gray-900 mb-1">Información de contacto</p>
+                        <p className="text-xs text-gray-700">
+                          <span className="font-medium">{customerInfo.firstName} {customerInfo.lastName}</span>
+                        </p>
+                        <p className="text-xs text-gray-600">{customerInfo.email}</p>
+                      </div>
+                      <button
+                        onClick={() => setShowPickupTimeModal(true)}
+                        className="text-xs text-red-600 hover:text-red-700 font-semibold underline flex-shrink-0"
+                      >
+                        Editar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
             {/* Mostrar información si no hay tipo seleccionado */}
             {!currentDeliveryType && (
-              <div className="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
-                <p className="text-xs text-yellow-800">
-                  Haz clic en una opción para seleccionar el tipo de entrega
+              <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-xs text-blue-800">
+                  Selecciona la opción de recogida en el local para continuar
                 </p>
               </div>
             )}
@@ -257,16 +316,27 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         onOrderConfirmed={(data) => {
-          // Guardar datos de confirmación
-          setOrderConfirmationData({
+          console.log("🟡 [CartSummary] onOrderConfirmed callback recibido")
+          console.log("🟡 [CartSummary] data recibida:", data)
+          // Guardar datos de confirmación y mostrar toast en el mismo ciclo
+          const confirmationData = {
             pickupTime: data.pickupTime,
             orderTotal: data.orderTotal,
             paymentMethod: data.paymentMethod,
-          })
-          // Cerrar checkout flow
-          setIsCheckoutOpen(false)
-          // Mostrar modal de confirmación (independiente del carrito)
+            customerInfo: customerInfo || undefined, // Incluir información del cliente si está disponible
+          }
+          console.log("🟡 [CartSummary] Estableciendo estados de forma síncrona")
+          // Guardar en ref también para persistencia durante re-renders
+          orderConfirmationDataRef.current = confirmationData
+          // Establecer ambos estados de forma síncrona
+          setOrderConfirmationData(confirmationData)
           setShowOrderConfirmation(true)
+          console.log("🟡 [CartSummary] Estados establecidos - orderConfirmationData:", confirmationData, "showOrderConfirmation: true")
+          // Cerrar checkout flow DESPUÉS con un delay para asegurar que el toast se renderice
+          setTimeout(() => {
+            console.log("🟡 [CartSummary] Cerrando checkout flow después del delay")
+            setIsCheckoutOpen(false)
+          }, 200)
         }}
       />
 
@@ -283,21 +353,35 @@ export default function CartSummary({ onCheckout, showViewCartButton = false }: 
         onClose={() => setShowPickupTimeModal(false)}
         onConfirm={handlePickupTimeConfirm}
         currentPickupTime={pickupTime}
+        currentCustomerInfo={customerInfo || undefined}
       />
 
       {/* Order Confirmation Modal (independiente del carrito) */}
-      {orderConfirmationData && (
-        <OrderConfirmationModal
-          isOpen={showOrderConfirmation}
-          onClose={() => {
-            setShowOrderConfirmation(false)
-            setOrderConfirmationData(null)
-          }}
-          pickupTime={orderConfirmationData.pickupTime || ""}
-          orderTotal={orderConfirmationData.orderTotal}
-          paymentMethod={orderConfirmationData.paymentMethod}
-        />
-      )}
+      {(() => {
+        const dataToUse = orderConfirmationData || orderConfirmationDataRef.current
+        return dataToUse
+      })() && (() => {
+        const dataToUse = orderConfirmationData || orderConfirmationDataRef.current
+        if (!dataToUse) return null
+        return (
+          <OrderConfirmationModal
+            isOpen={showOrderConfirmation}
+            onClose={() => {
+              console.log("🟣 [CartSummary] Modal onClose llamado - limpiando carrito ahora")
+              setShowOrderConfirmation(false)
+              setOrderConfirmationData(null)
+              orderConfirmationDataRef.current = null
+              setCustomerInfo(null) // Limpiar información del cliente
+              // Limpiar carrito cuando el usuario cierra el modal
+              clearCart()
+            }}
+            pickupTime={dataToUse.pickupTime || ""}
+            orderTotal={dataToUse.orderTotal}
+            paymentMethod={dataToUse.paymentMethod}
+            customerInfo={dataToUse.customerInfo}
+          />
+        )
+      })()}
     </>
   )
 }

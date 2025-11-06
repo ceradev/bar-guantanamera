@@ -147,6 +147,37 @@ export default function MenuSection() {
     setSelectedProduct(null)
   }, [])
 
+  // Función helper para calcular cantidad en carrito de bebidas de selección múltiple
+  const getBeverageCartQuantity = useCallback((beverageName: string): number => {
+    // Si no tiene opciones múltiples, buscar directamente
+    if (!beverageName.includes("|")) {
+      const itemInCart = items.find((cartItem) => cartItem.name === beverageName)
+      return itemInCart?.quantity || 0
+    }
+
+    // Extraer opciones múltiples
+    const match = beverageName.match(/\(([^)]+)\)\s*$/)
+    const size = match ? match[1] : ""
+    
+    // Separar las opciones por "|" y limpiar
+    const options = beverageName.split("|").map(opt => {
+      let cleanOption = opt.trim()
+      cleanOption = cleanOption.replace(/\s*\([^)]+\)\s*$/, "")
+      return size && !cleanOption.includes(size) ? `${cleanOption} (${size})` : cleanOption
+    })
+
+    // Buscar en el carrito si alguna de las opciones está presente y sumar cantidades
+    let totalQuantity = 0
+    options.forEach(option => {
+      const itemInCart = items.find((cartItem) => cartItem.name === option)
+      if (itemInCart) {
+        totalQuantity += itemInCart.quantity
+      }
+    })
+
+    return totalQuantity
+  }, [items])
+
   const renderMenuItem = useCallback((item: MenuItem, index: number) => {
     const itemInCart = items.find((cartItem) => cartItem.name === item.name)
     const cartQuantity = itemInCart?.quantity || 0
@@ -367,8 +398,16 @@ export default function MenuSection() {
                   <motion.div 
                     key={combo.name} 
                     variants={itemVariants}
-                    className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col"
+                    className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col relative cursor-pointer"
+                    onClick={() => handleProductClick(combo)}
                   >
+                    {cartQuantity > 0 && (
+                      <Badge className="absolute top-4 left-4 bg-green-600 text-white shadow-lg border-0 px-3 py-1 z-10">
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        {cartQuantity} en carrito
+                      </Badge>
+                    )}
+                    
                     <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-200 transition-colors">
                       <span className="text-2xl">{combo.icon}</span>
                     </div>
@@ -378,7 +417,10 @@ export default function MenuSection() {
                     
                     {/* Botón Agregar al Carrito */}
                     <Button
-                      onClick={() => handleProductClick(combo)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleProductClick(combo)
+                      }}
                       className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
                       size="sm"
                     >
@@ -485,8 +527,7 @@ export default function MenuSection() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {bebidasYMojos.bebidas.map((item) => {
-                const itemInCart = items.find((cartItem) => cartItem.name === item.name)
-                const cartQuantity = itemInCart?.quantity || 0
+                const cartQuantity = getBeverageCartQuantity(item.name)
                 
                 return (
                   <div
