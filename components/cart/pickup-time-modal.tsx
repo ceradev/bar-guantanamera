@@ -101,14 +101,12 @@ const generateAvailableTimes = (): string[] => {
   
   if (minPickupMinute === 0) {
     // Ya está en punto, empezar desde ahí
-    startMinute = 0
   } else if (minPickupMinute <= 30) {
     // Entre :01 y :30, redondear a :30
     startMinute = 30
   } else {
     // Entre :31 y :59, avanzar a la siguiente hora en punto
     startHour = minPickupHour + 1
-    startMinute = 0
   }
   
   // Si ya pasamos la hora de cierre, no hay horarios disponibles hoy
@@ -210,6 +208,17 @@ export default function PickupTimeModal({
   // Validar si todos los campos están completos
   const isFormValid = selectedTime && firstName.trim() && lastName.trim() && email.trim() && email.includes("@")
 
+  // Mensaje de error para el formulario
+  const getErrorMessage = (): string => {
+    if (!selectedTime) {
+      return "Por favor, selecciona una hora de recogida"
+    }
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !email.includes("@")) {
+      return "Por favor, completa todos los campos obligatorios"
+    }
+    return "Por favor, completa todos los campos"
+  }
+
   if (!isOpen) return null
   if (!globalThis.window) return null
 
@@ -298,7 +307,7 @@ export default function PickupTimeModal({
                   {availableTimes.length === 0 && (
                     <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
                       <p className="text-xs text-red-800 font-medium text-center">
-                        El restaurante está cerrado hoy. Por favor, selecciona otro día.
+                        El restaurante está cerrado hoy. Por favor, intenta más tarde o otro día.
                       </p>
                     </div>
                   )}
@@ -396,11 +405,7 @@ export default function PickupTimeModal({
                 </Button>
                 {!isFormValid && (
                   <p className="text-xs text-red-600 text-center mt-2">
-                    {!selectedTime 
-                      ? "Por favor, selecciona una hora de recogida"
-                      : !firstName.trim() || !lastName.trim() || !email.trim() || !email.includes("@")
-                      ? "Por favor, completa todos los campos obligatorios"
-                      : "Por favor, completa todos los campos"}
+                    {getErrorMessage()}
                   </p>
                 )}
               </div>
