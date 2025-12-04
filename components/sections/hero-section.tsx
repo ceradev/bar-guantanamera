@@ -57,16 +57,13 @@ export default function HeroSection() {
       {/* Main Content Container - Centered */}
       <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Badge - 23 AÑOS A SU SERVICIO */}
-          <motion.div
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 shadow-lg"
+          {/* Subtitle - 23 AÑOS A SU SERVICIO */}
+          <motion.p
+            className="text-sm md:text-base text-white/80 font-medium tracking-wider uppercase"
             variants={itemVariants}
           >
-            <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
-            <span className="text-white text-xs md:text-sm font-semibold tracking-wide">
-              23 AÑOS A SU SERVICIO
-            </span>
-          </motion.div>
+            23 AÑOS A SU SERVICIO
+          </motion.p>
 
           {/* Main Title - Large and centered */}
           <motion.h1

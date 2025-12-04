@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, Bike, Menu } from "lucide-react"
+import { ShoppingBag, Bike, Menu, X } from "lucide-react"
 import { motion, easeOut } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useThrottle } from "@/hooks/use-throttle"
@@ -13,6 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet"
 
 const headerVariants = {
@@ -304,61 +305,101 @@ const SiteHeader = () => {
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <SheetHeader>
-                <SheetTitle className="text-left text-xl font-bold text-black">
-                  Menú
-                </SheetTitle>
-              </SheetHeader>
-              <nav className="mt-8 flex flex-col gap-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "px-4 py-3 text-base font-medium transition-colors duration-200 rounded-lg",
-                      activeSection === link.id
-                        ? "text-red-600 font-semibold bg-red-50"
-                        : "text-gray-700 hover:text-red-600 hover:bg-gray-50",
-                    )}
-                    prefetch={false}
+            <SheetContent side="right" className="w-full sm:w-[400px] p-0 [&>button]:hidden">
+              {/* Header con logo y botón cerrar */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <Link 
+                  href={getHashLink("#home")} 
+                  className="flex items-center gap-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  prefetch={false}
+                >
+                  <img src="/bar-icono.svg" alt="Logo Guantanamera" className="h-8 w-8" />
+                  <div className="flex flex-col">
+                    <span className="text-xl font-bold text-black">Guantanamera</span>
+                    <span className="text-xs text-gray-500 font-medium -mt-1">23 años a su servicio</span>
+                  </div>
+                </Link>
+                <SheetClose asChild>
+                  <button
+                    className="h-8 w-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
+                    aria-label="Cerrar menú"
                   >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <Button
-                    asChild
-                    className="w-full bg-red-600 text-white shadow-md shadow-red-500/20 hover:bg-red-700"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link href={getHashLink("#pedir")}>Pedir Ahora</Link>
-                  </Button>
+                    <X className="h-5 w-5" />
+                  </button>
+                </SheetClose>
+              </div>
+
+              {/* Contenido del menú */}
+              <div className="px-6 py-6 space-y-6 overflow-y-auto">
+                {/* Sección NAVEGACIÓN */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    Navegación
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "rounded-lg px-4 py-3 text-sm font-semibold transition-colors text-center border-2",
+                          activeSection === link.id
+                            ? "bg-red-50 text-red-600 border-red-600"
+                            : "text-gray-800 hover:bg-gray-100 border-gray-200",
+                        )}
+                        prefetch={false}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col gap-3">
+
+                {/* Sección PEDIR ONLINE */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    Pedir Online
+                  </h3>
+                  <div className="space-y-3">
+                    <Link
+                      href="https://www.ubereats.com/es/store/bar-guantanamera/I6yHelcBWGuGn1VeHqaXJw"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 hover:bg-gray-50 transition-colors"
+                    >
+                      <ShoppingBag className="h-5 w-5 text-gray-600" />
+                      <span className="font-semibold">Pedir en Uber Eats</span>
+                    </Link>
+                    <Link
+                      href="https://glovoapp.com/es/es/las-chafiras/guantanamera-las-chafiras"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg border-2 border-gray-200 bg-white px-4 py-3 text-gray-800 hover:bg-gray-50 transition-colors"
+                    >
+                      <Bike className="h-5 w-5 text-gray-600" />
+                      <span className="font-semibold">Pedir en Glovo</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Sección ACCIÓN RÁPIDA */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    Acción Rápida
+                  </h3>
                   <Link
-                    href="https://www.ubereats.com/es/store/bar-guantanamera/I6yHelcBWGuGn1VeHqaXJw"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={getHashLink("#pedir")}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-red-600 transition-colors rounded-lg hover:bg-gray-50"
+                    className="block rounded-lg bg-red-600 px-4 py-3 text-center font-semibold text-white hover:bg-red-700 transition-colors"
                   >
-                    <ShoppingBag className="h-5 w-5" />
-                    <span className="font-medium">Uber Eats</span>
-                  </Link>
-                  <Link
-                    href="https://glovoapp.com/es/es/las-chafiras/guantanamera-las-chafiras"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-red-600 transition-colors rounded-lg hover:bg-gray-50"
-                  >
-                    <Bike className="h-5 w-5" />
-                    <span className="font-medium">Glovo</span>
+                    Pedir Ahora
                   </Link>
                 </div>
-              </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
