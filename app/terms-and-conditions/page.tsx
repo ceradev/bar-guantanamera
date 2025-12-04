@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, FileText, ShoppingCart, CreditCard, Truck, AlertTriangle, Phone } from "lucide-react";
+import { ArrowLeft, FileText, ShoppingBag, CreditCard, Truck, AlertTriangle, Phone } from "lucide-react";
 
 export default function TerminosServicioPage() {
   return (
@@ -64,7 +64,7 @@ export default function TerminosServicioPage() {
           {/* Orders and Payment */}
           <div className="bg-white rounded-lg shadow-sm p-8">
             <div className="flex items-center gap-3 mb-6">
-              <ShoppingCart className="h-8 w-8 text-red-600" />
+              <ShoppingBag className="h-8 w-8 text-red-600" />
               <h2 className="text-2xl font-semibold text-gray-900">
                 Pedidos y Pagos
               </h2>

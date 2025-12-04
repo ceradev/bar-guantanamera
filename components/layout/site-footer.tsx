@@ -18,7 +18,7 @@ export default function SiteFooter() {
   // Helper para ajustar enlaces con hash según la ruta actual
   const getHashLink = (hash: string) => {
     // Si estamos en la página principal, usar solo el hash
-    // Si estamos en otra página (como /carrito), usar /#hash para navegar correctamente
+    // Si estamos en otra página, usar /#hash para navegar correctamente
     return pathname === "/" ? hash : `/${hash}`;
   };
   return (
@@ -44,29 +44,6 @@ export default function SiteFooter() {
               Crujiente por fuera, jugoso por dentro. Especialidad en pollos,
               costillas y patas asadas con la receta casera que nos define.
             </p>
-            <div className="flex space-x-4">
-              <Link
-                href="#"
-                className="text-gray-400 hover:text-red-500 transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook className="h-5 w-5" />
-              </Link>
-              <Link
-                href="#"
-                className="text-gray-400 hover:text-red-500 transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-5 w-5" />
-              </Link>
-              <Link
-                href="#"
-                className="text-gray-400 hover:text-red-500 transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </Link>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -162,7 +139,7 @@ export default function SiteFooter() {
                 <div className="text-sm">
                   <div className="text-gray-300">
                     <div className="font-medium text-white mb-1">
-                      Lunes y Viernes
+                      Lunes, Jueves y Viernes
                     </div>
                     <div>9:00 - 18:00</div>
                   </div>

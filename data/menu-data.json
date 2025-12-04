@@ -168,58 +168,58 @@
   "bebidasYMojos": {
     "bebidas": [
       {
-        "name": "Coca-Cola | Fanta (33cl)",
-        "description": "Coca-Cola Original o Zero y Fanta Naranja",
+        "name": "Coca-Cola Original o Zero | Fanta Naranja (33cl)",
+        "description": "",
         "price": "1.50€",
         "allergens": ["gluten"]
       },
       {
-        "name": "Coca-Cola | Fanta (1,5L)",
-        "description": "Coca-Cola Original o Zero y Fanta Naranja",
+        "name": "Coca-Cola Original o Zero | Fanta Naranja (1,5L)",
+        "description": "",
         "price": "3.00€",
         "allergens": ["gluten"]
       },
       {
-        "name": "Agua Mineral",
-        "description": "Agua mineral natural (33cl)",
+        "name": "Agua Mineral Natural (33cl)",
+        "description": "",
         "price": "1.00€",
         "allergens": []
       },
       {
-        "name": "Nestea | Aquarius (33cl)",
-        "description": "Nestea de Mango Piña o Aquarius de Naranja",
+        "name": "Nestea de Mango Piña | Aquarius de Naranja (33cl)",
+        "description": "",
         "price": "1.80€",
         "allergens": []
       },
       {
-        "name": "Nestea | Aquarius (1,5L)",
-        "description": "Nestea de Mango Piña o Aquarius de Naranja",
+        "name": "Nestea de Mango Piña | Aquarius de Naranja (1,5L)",
+        "description": "",
         "price": "3.50€",
         "allergens": []
       },
       {
-        "name" : "Clipper | Seven Up (50cl)",
-        "description": "Clipper de Fresa o Seven Up de Limón",
+        "name" : "Clipper de Fresa | Seven Up de Limón (50cl)",
+        "description": "",
         "price": "1.80€",
         "allergens": []
       }
     ],
     "mojos": [
       {
-        "name": "Mojo Rojo Picante",
-        "description": "Mojo canario tradicional casero con pimiento, ajo y aceite de oliva",
+        "name": "Mojo Rojo Picante Casero",
+        "description": "",
         "price": "1.00€",
         "allergens": []
       },
       {
-        "name": "Mojo Verde",
-        "description": "Mojo verde casero con cilantro, ajo y aceite de oliva",
+        "name": "Mojo Verde Casero)",
+        "description": "",
         "price": "1.00€",
         "allergens": []
       },
       {
-        "name": "Alioli Tradicional",
-        "description": "Alioli casero con aceite de oliva, ajo y cilantro 🌿",
+        "name": "Alioli Tradicional Casero",
+        "description": "",
         "price": "1.00€",
         "allergens": ["eggs"]
       }

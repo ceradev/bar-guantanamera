@@ -1,12 +1,9 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-// Cart functionality disabled temporarily
-// import { useCart } from "@/hooks/use-cart"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ShoppingBag, Bike, Menu } from "lucide-react"
-// ShoppingCart removed - cart disabled temporarily
 import { motion, easeOut } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useThrottle } from "@/hooks/use-throttle"
@@ -33,16 +30,12 @@ const headerVariants = {
 const SiteHeader = () => {
   const [activeSection, setActiveSection] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  // Cart functionality disabled temporarily
-  // const { getTotalItems } = useCart()
-  // const cartItemsCount = getTotalItems()
-  const cartItemsCount = 0
   const pathname = usePathname()
 
   // Helper para ajustar enlaces con hash según la ruta actual
   const getHashLink = useCallback((hash: string) => {
     // Si estamos en la página principal, usar solo el hash
-    // Si estamos en otra página (como /carrito), usar /#hash para navegar correctamente
+    // Si estamos en otra página, usar /#hash para navegar correctamente
     return pathname === "/" ? hash : `/${hash}`
   }, [pathname])
 
@@ -255,20 +248,6 @@ const SiteHeader = () => {
             </Link>
           </div>
 
-          {/* Cart Icon - Deshabilitado temporalmente */}
-          {/* <Link
-            href="/carrito"
-            className="relative p-2 text-gray-700 hover:text-red-600 transition-colors"
-            title="Ver carrito"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartItemsCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                {cartItemsCount > 99 ? "99+" : cartItemsCount}
-              </span>
-            )}
-          </Link> */}
-
           <Button asChild size="sm" className="bg-red-600 text-white shadow-md shadow-red-500/20 hover:bg-red-700">
             <Link href={getHashLink("#pedir")}>Pedir Ahora</Link>
           </Button>
@@ -295,20 +274,6 @@ const SiteHeader = () => {
           >
             <Bike className="h-5 w-5" />
           </Link>
-          
-          {/* Cart Icon for mobile - Deshabilitado temporalmente */}
-          {/* <Link
-            href="/carrito"
-            className="relative p-2 text-gray-700 hover:text-red-600 transition-colors"
-            title="Ver carrito"
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {cartItemsCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                {cartItemsCount > 99 ? "99+" : cartItemsCount}
-              </span>
-            )}
-          </Link> */}
 
           {/* Menú hamburguesa separado */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>

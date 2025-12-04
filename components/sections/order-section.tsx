@@ -183,16 +183,6 @@ export default function OrderSection() {
                       Ver Menú y Pedir
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="rounded-full border-red-300 text-red-600 hover:bg-red-50"
-                    size="lg"
-                  >
-                    <Link href="/carrito">
-                      Ver Carrito
-                    </Link>
                   </Button> */}
                   
                   {/* Mensaje de Próximamente */}

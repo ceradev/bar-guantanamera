@@ -10,7 +10,6 @@ import { motion, useInView } from "framer-motion"
 import { useRef, useState, useMemo, useCallback } from "react"
 import menuData from "@/data/menu-data.json"
 import type { MenuData, MenuItem } from "@/types/menu"
-// Cart functionality disabled temporarily
 
 // Allergen icons mapping
 const allergenIcons = {
@@ -188,53 +187,47 @@ export default function MenuSection() {
     </div>
   )
 
-  // Render menu item in rustic style
+  // Render menu item as card with background image
   const renderMenuItem = useCallback((item: MenuItem, index: number) => {
     return (
       <motion.div 
         key={item.name} 
         variants={itemVariants}
-        className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
+        className="relative h-48 md:h-56 rounded-2xl overflow-hidden group shadow-lg hover:shadow-xl transition-all duration-300"
       >
-        {/* Circular Image */}
-        <div className="relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden ring-2 ring-red-100">
+        {/* Background Image with Low Opacity */}
+        <div className="absolute inset-0">
           <Image
             src={item.image || "/placeholder.svg"}
             alt={item.name}
             fill
-            className="object-cover"
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
           />
+          {/* Dark overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300" />
         </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4 mb-1">
-            <h4 className="text-black text-lg md:text-xl font-semibold leading-tight">
+        {/* Content Overlay */}
+        <div className="relative h-full flex flex-col justify-between p-5 md:p-6">
+          {/* Top Section: Title and Popular Badge */}
+          <div className="flex items-start justify-between gap-3">
+            <h4 className="text-white text-lg md:text-xl font-bold leading-tight drop-shadow-lg flex-1">
               {item.name}
             </h4>
-            <span className="text-red-600 text-lg md:text-xl font-bold whitespace-nowrap flex-shrink-0">
+            {item.popular && (
+              <Badge className="bg-red-600 text-white border-0 rounded-lg text-xs md:text-sm px-3 py-1 shadow-lg flex-shrink-0">
+                <Star className="w-3 h-3 md:w-4 md:h-4 mr-1 fill-current" />
+                Popular
+              </Badge>
+            )}
+          </div>
+
+          {/* Bottom Section: Price */}
+          <div className="flex items-center justify-end">
+            <span className="text-white text-2xl md:text-3xl font-bold drop-shadow-lg">
               {item.price}
             </span>
           </div>
-          
-          <p className="text-gray-600 text-sm leading-relaxed mb-2">
-            {item.description}
-          </p>
-
-          {/* Allergens */}
-          {item.allergens.length > 0 && (
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xs text-gray-500">Alérgenos:</span>
-              <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
-            </div>
-          )}
-
-          {item.popular && (
-            <Badge className="mt-2 bg-red-600 text-white border-0 rounded-lg text-xs px-2 py-0.5">
-              <Star className="w-3 h-3 mr-1 fill-current" />
-              Popular
-            </Badge>
-          )}
         </div>
       </motion.div>
     )
@@ -267,9 +260,7 @@ export default function MenuSection() {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 tracking-tight">
             Carta <span className="text-red-600">Guantanamera</span>
           </h2>
-          
-          {renderSeparator()}
-          
+                    
           <p className="mx-auto max-w-2xl text-gray-600 leading-relaxed text-base md:text-lg">
             Descubre nuestras especialidades preparadas con ingredientes frescos y recetas caseras
           </p>
@@ -336,27 +327,18 @@ export default function MenuSection() {
                   variants={headerVariants}
                   className="text-center mb-12"
                 >
-                  <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
-                    {category.title.toUpperCase()}
-                  </p>
-                  {renderSeparator()}
-                  <p className="text-gray-600 text-base italic max-w-2xl mx-auto">
+                  <h3 className="text-black text-2xl md:text-3xl font-bold mb-2">
+                    {category.title}
+                  </h3>
+                  <div className="h-1 bg-red-600 w-24 mx-auto mb-4 rounded-full"></div>
+                  <p className="text-gray-600 text-base md:text-lg italic max-w-2xl mx-auto">
                     {category.subtitle}
                   </p>
                 </motion.div>
 
-                {/* Menu Items Grid - Two Columns */}
-                <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                  <div className="space-y-0">
-                    {category.items
-                      .filter((_, index) => index % 2 === 0)
-                      .map((item, index) => renderMenuItem(item, index * 2))}
-                  </div>
-                  <div className="space-y-0">
-                    {category.items
-                      .filter((_, index) => index % 2 === 1)
-                      .map((item, index) => renderMenuItem(item, index * 2 + 1))}
-                  </div>
+                {/* Menu Items Grid - Cards Layout */}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  {category.items.map((item, index) => renderMenuItem(item, index))}
                 </div>
               </motion.div>
             ))}
@@ -419,27 +401,18 @@ export default function MenuSection() {
                     variants={headerVariants}
                     className="text-center mb-12"
                   >
-                    <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
-                      {category.title.toUpperCase()}
-                    </p>
-                    {renderSeparator()}
-                    <p className="text-gray-600 text-base italic max-w-2xl mx-auto">
+                    <h3 className="text-black text-2xl md:text-3xl font-bold mb-2">
+                      {category.title}
+                    </h3>
+                    <div className="h-1 bg-red-600 w-24 mx-auto mb-4 rounded-full"></div>
+                    <p className="text-gray-600 text-base md:text-lg italic max-w-2xl mx-auto">
                       {category.subtitle}
                     </p>
                   </motion.div>
 
-                  {/* Menu Items Grid - Two Columns */}
-                  <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                    <div className="space-y-0">
-                      {category.items
-                        .filter((_, index) => index % 2 === 0)
-                        .map((item, index) => renderMenuItem(item, index * 2))}
-                    </div>
-                    <div className="space-y-0">
-                      {category.items
-                        .filter((_, index) => index % 2 === 1)
-                        .map((item, index) => renderMenuItem(item, index * 2 + 1))}
-                    </div>
+                  {/* Menu Items Grid - Cards Layout */}
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    {category.items.map((item, index) => renderMenuItem(item, index))}
                   </div>
                 </motion.div>
               </TabsContent>
@@ -447,153 +420,100 @@ export default function MenuSection() {
           </Tabs>
         )}
 
-        {/* Combo Meals Section */}
-        <motion.div
-          className="mt-20"
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
-            <motion.div 
-              variants={headerVariants}
-              className="text-center mb-12"
-            >
-              <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
-                Ofertas Especiales
-              </p>
-              {renderSeparator()}
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              {comboMeals.map((combo, index) => (
-                <motion.div
-                  key={combo.name}
-                  variants={itemVariants}
-                  className="bg-white border border-gray-200 rounded-xl p-6 text-center"
-                >
-                  <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-3xl">{combo.icon}</span>
-                  </div>
-                  <h4 className="font-bold text-black mb-2 text-xl">{combo.name}</h4>
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">{combo.description}</p>
-                  <span className="text-red-600 text-2xl font-bold">{combo.price}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
         {/* Mojos and Beverages */}
         <motion.div
-          className="mt-12 space-y-8"
+          className="mt-12"
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          {/* Mojos */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
-            <motion.div 
-              variants={headerVariants}
-              className="text-center mb-8"
-            >
-              <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
-                Mojos Caseros
-              </p>
-              {renderSeparator()}
-            </motion.div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bebidasYMojos.mojos.map((item) => (
-                <motion.div
-                  key={item.name}
-                  variants={itemVariants}
-                  className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+            {/* Left Column - Combo Meals and Mojos */}
+            <div className="space-y-6 md:space-y-8">
+              {/* Combo Meals */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+                <motion.div 
+                  variants={headerVariants}
+                  className="text-center mb-8"
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4 mb-1">
-                      <h5 className="font-semibold text-black text-base">{item.name}</h5>
+                  <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                    Platos Combinados
+                  </p>
+                  {renderSeparator()}
+                </motion.div>
+
+                <div className="space-y-4">
+                  {comboMeals.map((combo, index) => (
+                    <motion.div
+                      key={combo.name}
+                      variants={itemVariants}
+                      className="bg-white border border-gray-200 rounded-xl p-5 text-center"
+                    >
+                      <div className="flex items-center justify-center gap-3 mb-3">
+                        <span className="text-2xl">{combo.icon}</span>
+                        <h4 className="font-bold text-black text-lg">{combo.name}</h4>
+                      </div>
+                      <p className="text-gray-600 mb-3 text-sm leading-relaxed">{combo.description}</p>
+                      <span className="text-red-600 text-xl font-bold">{combo.price}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mojos */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+                <motion.div 
+                  variants={headerVariants}
+                  className="text-center mb-8"
+                >
+                  <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                    Mojos Caseros
+                  </p>
+                  {renderSeparator()}
+                </motion.div>
+                
+                <div className="space-y-0">
+                  {bebidasYMojos.mojos.map((item) => (
+                    <motion.div
+                      key={item.name}
+                      variants={itemVariants}
+                      className="flex items-center justify-between gap-4 py-4 border-b border-gray-200 last:border-b-0"
+                    >
+                      <h5 className="font-semibold text-black text-base flex-1">{item.name}</h5>
                       <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
                         {item.price}
                       </span>
-                    </div>
-                    <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Beverages */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
-            <motion.div 
-              variants={headerVariants}
-              className="text-center mb-8"
-            >
-              <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
-                Bebidas
-              </p>
-              {renderSeparator()}
-            </motion.div>
-            
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-              <div className="space-y-0">
-                {separatedBeverages
-                  .filter((_, index) => index % 2 === 0)
-                  .map((item, index) => (
-                    <motion.div
-                      key={`${item.name}-${index * 2}`}
-                      variants={itemVariants}
-                      className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-1">
-                          <h5 className="font-semibold text-black text-base">{item.name}</h5>
-                          <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
-                            {item.price}
-                          </span>
-                        </div>
-                        {item.description && (
-                          <p className="text-gray-600 text-sm leading-relaxed mb-2">{item.description}</p>
-                        )}
-                        {item.allergens.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-500">Alérgenos:</span>
-                            <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
-                          </div>
-                        )}
-                      </div>
                     </motion.div>
                   ))}
+                </div>
               </div>
+            </div>
+
+            {/* Beverages - Right Column */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+              <motion.div 
+                variants={headerVariants}
+                className="text-center mb-8"
+              >
+                <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                  Bebidas
+                </p>
+                {renderSeparator()}
+              </motion.div>
+              
               <div className="space-y-0">
-                {separatedBeverages
-                  .filter((_, index) => index % 2 === 1)
-                  .map((item, index) => (
-                    <motion.div
-                      key={`${item.name}-${index * 2 + 1}`}
-                      variants={itemVariants}
-                      className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-1">
-                          <h5 className="font-semibold text-black text-base">{item.name}</h5>
-                          <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
-                            {item.price}
-                          </span>
-                        </div>
-                        {item.description && (
-                          <p className="text-gray-600 text-sm leading-relaxed mb-2">{item.description}</p>
-                        )}
-                        {item.allergens.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-500">Alérgenos:</span>
-                            <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                {separatedBeverages.map((item, index) => (
+                  <motion.div
+                    key={`${item.name}-${index}`}
+                    variants={itemVariants}
+                    className="flex items-center justify-between gap-4 py-4 border-b border-gray-200 last:border-b-0"
+                  >
+                    <h5 className="font-semibold text-black text-base flex-1">{item.name}</h5>
+                    <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
+                      {item.price}
+                    </span>
+                  </motion.div>
+                ))}
               </div>
             </div>
           </div>

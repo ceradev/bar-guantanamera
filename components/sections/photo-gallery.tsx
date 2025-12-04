@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { motion, easeOut, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState, useMemo, useCallback, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Wave } from "@/components/ui/wave";
 import galleryData from "@/data/gallery-data.json";
@@ -140,6 +140,17 @@ export default function PhotoGallery() {
     setShowAllImages(true);
   }, []);
 
+  const handleViewLess = useCallback(() => {
+    setShowAllImages(false);
+    // Scroll suave hacia la sección de galería
+    setTimeout(() => {
+      const gallerySection = document.getElementById("galeria");
+      if (gallerySection) {
+        gallerySection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+  }, []);
+
   return (
     <section
       id="galeria"
@@ -185,10 +196,10 @@ export default function PhotoGallery() {
         >
           {/* Mobile Grid - Simple 2 column layout */}
           <div className="grid grid-cols-2 lg:hidden gap-3">
-            {visibleImages.slice(0, 4).map((image, index) => (
+            {visibleImages.slice(0, showAllImages ? visibleImages.length : 4).map((image, index) => (
               <motion.div
                 key={`mobile-${index}-${image.alt}`}
-                className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-white aspect-square"
+                className={`group relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-white ${showAllImages ? 'aspect-[3/2]' : 'aspect-square'}`}
                 variants={imageVariants}
                 onClick={() => openLightbox(image, images.indexOf(image))}
               >
@@ -231,10 +242,24 @@ export default function PhotoGallery() {
                 </span>
               </motion.button>
             )}
+
+            {/* Celda "Ver menos" para móvil cuando se muestran todas las imágenes */}
+            {showAllImages && (
+              <motion.button
+                className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 aspect-square flex flex-col items-center justify-center text-white"
+                variants={imageVariants}
+                onClick={handleViewLess}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Minus className="w-8 h-8 mb-2" />
+                <span className="text-sm font-semibold">Ver menos</span>
+              </motion.button>
+            )}
           </div>
 
           {/* Desktop Bento Grid */}
-          <div className="hidden lg:grid grid-cols-4 grid-rows-3 gap-3 auto-rows-fr" style={{ minHeight: '600px' }}>
+          <div className={`hidden lg:grid gap-3 ${showAllImages ? 'grid-cols-4' : 'grid-cols-4 grid-rows-3'}`} style={showAllImages ? {} : { minHeight: '600px' }}>
             {visibleImages.map((image, index) => {
               // Usar layout bento solo para las primeras imágenes, luego grid uniforme
               const useBentoLayout = index < bentoLayout.length && !showAllImages;
@@ -244,7 +269,7 @@ export default function PhotoGallery() {
               return (
                 <motion.div
                   key={`desktop-${actualIndex}-${image.alt}`}
-                  className={`group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-white ${layout.col} ${layout.row}`}
+                  className={`group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-white ${layout.col} ${layout.row} ${showAllImages ? 'aspect-[4/3]' : ''}`}
                   variants={imageVariants}
                   onClick={() => openLightbox(image, actualIndex)}
                   whileHover={{ scale: 1.02 }}
@@ -293,6 +318,21 @@ export default function PhotoGallery() {
                 <span className="text-sm opacity-90 mt-1 relative z-10">
                   +{images.length - INITIAL_IMAGES_LIMIT} más
                 </span>
+              </motion.button>
+            )}
+
+            {/* Celda "Ver menos" como parte del grid cuando se muestran todas las imágenes */}
+            {showAllImages && (
+              <motion.button
+                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br from-gray-600 via-gray-700 to-gray-800 col-span-1 row-span-1 flex flex-col items-center justify-center text-white"
+                variants={imageVariants}
+                onClick={handleViewLess}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                <Minus className="w-12 h-12 mb-3 relative z-10" strokeWidth={2.5} />
+                <span className="text-lg font-bold relative z-10">Ver menos</span>
               </motion.button>
             )}
           </div>
