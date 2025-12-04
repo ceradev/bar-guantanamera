@@ -277,7 +277,7 @@ export default function TestimonialsSection() {
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-8 shadow-lg border border-red-100 max-w-2xl mx-auto">
+          <div className="bg-gray-50 rounded-2xl p-8 shadow-lg border border-gray-200 max-w-2xl mx-auto">
             <h3 className="text-2xl font-bold text-black mb-4">¿Ya has probado nuestra comida?</h3>
             <p className="text-gray-600 mb-6">
               Comparte tu experiencia y ayuda a otros clientes a descubrir los sabores de Guantanamera.

@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Eye, X, Star, Wheat, Milk, Egg, Fish, Nut, Bean } from "lucide-react"
+import { Eye, X, Wheat, Milk, Egg, Fish, Nut, Bean, UtensilsCrossed } from "lucide-react"
 import Image from "next/image"
 import { motion, useInView } from "framer-motion"
-import { useRef, useState, useMemo, useCallback } from "react"
+import { useRef, useState, useMemo, useCallback, useEffect } from "react"
 import menuData from "@/data/menu-data.json"
 import type { MenuData, MenuItem } from "@/types/menu"
 
@@ -90,7 +90,32 @@ export default function MenuSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [activeTab, setActiveTab] = useState("pollos")
   const [showFullMenu, setShowFullMenu] = useState(false)
+  const [currentPopularIndex, setCurrentPopularIndex] = useState(0)
   const items: never[] = []
+
+  // Get all popular items from all categories
+  const popularItems = useMemo(() => {
+    const items: MenuItem[] = []
+    Object.values(menuCategories).forEach((category) => {
+      category.items.forEach((item) => {
+        if (item.popular) {
+          items.push(item)
+        }
+      })
+    })
+    return items
+  }, [])
+
+  // Auto-play carousel effect - continuous horizontal scroll
+  useEffect(() => {
+    if (popularItems.length === 0) return
+    
+    const interval = setInterval(() => {
+      setCurrentPopularIndex((prev) => (prev + 1) % popularItems.length)
+    }, 5000) // Change slide every 5 seconds (slower)
+
+    return () => clearInterval(interval)
+  }, [popularItems.length])
 
   const handleViewFullMenu = useCallback(() => {
     setShowFullMenu(true)
@@ -209,17 +234,11 @@ export default function MenuSection() {
 
         {/* Content Overlay */}
         <div className="relative h-full flex flex-col justify-between p-5 md:p-6">
-          {/* Top Section: Title and Popular Badge */}
+          {/* Top Section: Title */}
           <div className="flex items-start justify-between gap-3">
             <h4 className="text-white text-lg md:text-xl font-bold leading-tight drop-shadow-lg flex-1">
               {item.name}
             </h4>
-            {item.popular && (
-              <Badge className="bg-red-600 text-white border-0 rounded-lg text-xs md:text-sm px-3 py-1 shadow-lg flex-shrink-0">
-                <Star className="w-3 h-3 md:w-4 md:h-4 mr-1 fill-current" />
-                Popular
-              </Badge>
-            )}
           </div>
 
           {/* Bottom Section: Price */}
@@ -231,12 +250,12 @@ export default function MenuSection() {
         </div>
       </motion.div>
     )
-  }, [renderAllergenIcons])
+  }, [])
 
   return (
     <motion.section 
       id="menu" 
-      className="w-full scroll-mt-16 bg-white py-20 md:py-28 relative overflow-hidden" 
+      className="w-full bg-white py-20 md:py-28 relative overflow-hidden" 
       ref={ref}
       variants={revealVariants}
       initial="hidden"
@@ -250,10 +269,10 @@ export default function MenuSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <div className="bg-red-50/50 border border-red-100 rounded-full inline-flex items-center gap-2 px-4 py-2 mb-6">
-            <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
-            <span className="text-red-600 text-sm uppercase tracking-[0.2em] font-light">
-              Nuestra Especialidad
+          <div className="inline-flex items-center gap-2 bg-red-50 px-4 py-2 rounded-full mb-6">
+            <UtensilsCrossed className="w-4 h-4 text-red-600" />
+            <span className="text-red-600 text-sm font-medium tracking-wide">
+              NUESTRA ESPECIALIDAD
             </span>
           </div>
           
@@ -306,7 +325,92 @@ export default function MenuSection() {
             </Button>
           </motion.div>
         </motion.div>
+      </div>
 
+      {/* Popular Items Carousel - Full Width Section */}
+      {popularItems.length > 0 && (
+        <div className="w-full bg-gray-50 py-16 md:py-20">
+          <div className="container mx-auto px-4 md:px-6 max-w-6xl">
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+            >
+              <motion.div
+                variants={headerVariants}
+                className="text-center mb-12"
+              >
+                <h3 className="text-3xl md:text-4xl font-bold text-black mb-4">
+                  Nuestros Platos Más Populares
+                </h3>
+                <p className="text-gray-600 text-base md:text-lg max-w-xl mx-auto">
+                  Descubre los platos favoritos de nuestros clientes, preparados con ingredientes frescos y nuestra receta casera tradicional
+                </p>
+              </motion.div>
+
+              <div className="relative overflow-hidden rounded-xl">
+              <motion.div
+                className="flex gap-3 md:gap-4"
+                animate={{
+                  x: `-${currentPopularIndex * (100 / Math.min(4, popularItems.length))}%`,
+                }}
+                transition={{
+                  duration: 1.2,
+                  ease: "easeInOut",
+                }}
+                style={{
+                  width: `${(popularItems.length / Math.min(4, popularItems.length)) * 100}%`,
+                }}
+              >
+                {popularItems.map((item, index) => (
+                  <div
+                    key={item.name}
+                    className="flex-shrink-0"
+                    style={{
+                      width: `${100 / Math.min(4, popularItems.length)}%`,
+                      paddingRight: index < popularItems.length - 1 ? "0.75rem" : "0",
+                    }}
+                  >
+                    <div className="relative h-48 md:h-56 rounded-xl overflow-hidden group shadow-lg hover:shadow-xl transition-all duration-300">
+                      {/* Background Image */}
+                      <div className="absolute inset-0">
+                        <Image
+                          src={item.image || "/placeholder.svg"}
+                          alt={item.name}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        {/* Dark overlay */}
+                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300" />
+                      </div>
+
+                      {/* Content Overlay */}
+                      <div className="relative h-full flex flex-col justify-between p-4 md:p-5">
+                        {/* Top Section: Title */}
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-white text-base md:text-lg font-bold leading-tight drop-shadow-lg flex-1 line-clamp-2">
+                            {item.name}
+                          </h4>
+                        </div>
+
+                        {/* Bottom Section: Price */}
+                        <div className="flex items-center justify-end">
+                          <span className="text-white text-xl md:text-2xl font-bold drop-shadow-lg">
+                            {item.price}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+            </motion.div>
+          </div>
+        </div>
+      )}
+
+      <div className="container mx-auto px-4 md:px-6 py-16 md:py-20 max-w-6xl relative z-10">
         {/* Menu Categories Tabs */}
         {showFullMenu ? (
           /* Full Menu View - All Categories */
@@ -351,38 +455,30 @@ export default function MenuSection() {
               animate={isInView ? "visible" : "hidden"}
               className="mb-12"
             >
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-gray-50 border border-gray-200 rounded-lg p-1 h-auto gap-2">
+              <TabsList className="flex flex-wrap items-center justify-center gap-3 md:gap-4 bg-transparent border-0 p-0 h-auto">
                 <TabsTrigger
                   value="pollos"
-                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                  className="relative group data-[state=active]:text-red-600 data-[state=active]:font-bold text-gray-600 font-medium py-3 px-6 rounded-full border-2 border-transparent data-[state=active]:border-red-600 bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:bg-gray-50 data-[state=active]:bg-red-50"
                 >
-                  <span className="mr-2">🍗</span>
-                  <span className="hidden sm:inline">Pollos</span>
-                  <span className="sm:hidden">Pollos</span>
+                  Pollos
                 </TabsTrigger>
                 <TabsTrigger
                   value="costillasYPatas"
-                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                  className="relative group data-[state=active]:text-red-600 data-[state=active]:font-bold text-gray-600 font-medium py-3 px-6 rounded-full border-2 border-transparent data-[state=active]:border-red-600 bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:bg-gray-50 data-[state=active]:bg-red-50"
                 >
-                  <span className="mr-2">🥩</span>
-                  <span className="hidden sm:inline">Costillas</span>
-                  <span className="sm:hidden">Costillas</span>
+                  Costillas y Pata
                 </TabsTrigger>
                 <TabsTrigger
                   value="guarniciones"
-                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                  className="relative group data-[state=active]:text-red-600 data-[state=active]:font-bold text-gray-600 font-medium py-3 px-6 rounded-full border-2 border-transparent data-[state=active]:border-red-600 bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:bg-gray-50 data-[state=active]:bg-red-50"
                 >
-                  <span className="mr-2">🥗</span>
-                  <span className="hidden sm:inline">Guarniciones</span>
-                  <span className="sm:hidden">Guarniciones</span>
+                  Guarniciones
                 </TabsTrigger>
                 <TabsTrigger
                   value="quesadillasYBurritos"
-                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                  className="relative group data-[state=active]:text-red-600 data-[state=active]:font-bold text-gray-600 font-medium py-3 px-6 rounded-full border-2 border-transparent data-[state=active]:border-red-600 bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:bg-gray-50 data-[state=active]:bg-red-50"
                 >
-                  <span className="mr-2">🌯</span>
-                  <span className="hidden sm:inline">Mexicano</span>
-                  <span className="sm:hidden">Mexicano</span>
+                  Mexicano
                 </TabsTrigger>
               </TabsList>
             </motion.div>
@@ -427,7 +523,7 @@ export default function MenuSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 md:items-start">
             {/* Left Column - Combo Meals and Mojos */}
             <div className="space-y-6 md:space-y-8">
               {/* Combo Meals */}
@@ -490,7 +586,7 @@ export default function MenuSection() {
             </div>
 
             {/* Beverages - Right Column */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12 flex flex-col h-full">
               <motion.div 
                 variants={headerVariants}
                 className="text-center mb-8"
@@ -501,12 +597,12 @@ export default function MenuSection() {
                 {renderSeparator()}
               </motion.div>
               
-              <div className="space-y-0">
+              <div className="space-y-0 flex-1 flex flex-col justify-start">
                 {separatedBeverages.map((item, index) => (
                   <motion.div
                     key={`${item.name}-${index}`}
                     variants={itemVariants}
-                    className="flex items-center justify-between gap-4 py-4 border-b border-gray-200 last:border-b-0"
+                    className="flex items-center justify-between gap-4 py-5 md:py-6 border-b border-gray-200 last:border-b-0"
                   >
                     <h5 className="font-semibold text-black text-base flex-1">{item.name}</h5>
                     <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">

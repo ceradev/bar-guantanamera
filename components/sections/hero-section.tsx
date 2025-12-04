@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowDown, Phone } from "lucide-react"
 import Image from "next/image"
 import { motion, easeOut } from "framer-motion"
-import { Wave } from "@/components/ui/wave";
+import { Wave } from "@/components/ui/wave"
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,13 +57,6 @@ export default function HeroSection() {
       {/* Main Content Container - Centered */}
       <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Subtitle - 23 AÑOS A SU SERVICIO */}
-          <motion.p
-            className="text-sm md:text-base text-white/80 font-medium tracking-wider uppercase"
-            variants={itemVariants}
-          >
-            23 AÑOS A SU SERVICIO
-          </motion.p>
 
           {/* Main Title - Large and centered */}
           <motion.h1
