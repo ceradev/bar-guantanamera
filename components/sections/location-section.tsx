@@ -52,7 +52,7 @@ const businessHours = [
   { day: "Sábados y Domingos", hours: "09:00 - 17:00", days: [6, 0] },
   {
     day: "Martes, Miércoles",
-    hours: "",
+    hours: "Estamos cerrados",
     days: [2, 3],
   },
 ];

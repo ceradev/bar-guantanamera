@@ -32,7 +32,6 @@ function LazyVideo({ src, className }: { readonly src: string; readonly classNam
       loop
       playsInline
       preload="metadata"
-      autoPlay
     />
   );
 }

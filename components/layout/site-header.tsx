@@ -171,6 +171,25 @@ const SiteHeader = () => {
     }
   }, [])
 
+  useEffect(() => {
+    const handleResize = () => {
+      // Cerrar menú móvil cuando el viewport se convierte en desktop (768px y superior)
+      if (window.innerWidth >= 768 && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    // Añadir event listener para redimensionamiento de ventana
+    window.addEventListener("resize", handleResize)
+
+    // Llamar una vez al montar para manejar el estado inicial
+    handleResize()
+
+    // Limpiar event listener al desmontar
+    return () => {
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [isMobileMenuOpen])
 
   const navLinks = [
     { href: getHashLink("#menu"), label: "Menú", id: "menu" },
