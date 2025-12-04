@@ -1,10 +1,12 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import { useCart } from "@/hooks/use-cart"
+// Cart functionality disabled temporarily
+// import { useCart } from "@/hooks/use-cart"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, Bike, ShoppingCart, Menu } from "lucide-react"
+import { ShoppingBag, Bike, Menu } from "lucide-react"
+// ShoppingCart removed - cart disabled temporarily
 import { motion, easeOut } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useThrottle } from "@/hooks/use-throttle"
@@ -31,8 +33,10 @@ const headerVariants = {
 const SiteHeader = () => {
   const [activeSection, setActiveSection] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { getTotalItems } = useCart()
-  const cartItemsCount = getTotalItems()
+  // Cart functionality disabled temporarily
+  // const { getTotalItems } = useCart()
+  // const cartItemsCount = getTotalItems()
+  const cartItemsCount = 0
   const pathname = usePathname()
 
   // Helper para ajustar enlaces con hash según la ruta actual
@@ -251,8 +255,8 @@ const SiteHeader = () => {
             </Link>
           </div>
 
-          {/* Cart Icon */}
-          <Link
+          {/* Cart Icon - Deshabilitado temporalmente */}
+          {/* <Link
             href="/carrito"
             className="relative p-2 text-gray-700 hover:text-red-600 transition-colors"
             title="Ver carrito"
@@ -263,7 +267,7 @@ const SiteHeader = () => {
                 {cartItemsCount > 99 ? "99+" : cartItemsCount}
               </span>
             )}
-          </Link>
+          </Link> */}
 
           <Button asChild size="sm" className="bg-red-600 text-white shadow-md shadow-red-500/20 hover:bg-red-700">
             <Link href={getHashLink("#pedir")}>Pedir Ahora</Link>
@@ -292,8 +296,8 @@ const SiteHeader = () => {
             <Bike className="h-5 w-5" />
           </Link>
           
-          {/* Cart Icon for mobile */}
-          <Link
+          {/* Cart Icon for mobile - Deshabilitado temporalmente */}
+          {/* <Link
             href="/carrito"
             className="relative p-2 text-gray-700 hover:text-red-600 transition-colors"
             title="Ver carrito"
@@ -304,7 +308,7 @@ const SiteHeader = () => {
                 {cartItemsCount > 99 ? "99+" : cartItemsCount}
               </span>
             )}
-          </Link>
+          </Link> */}
 
           {/* Menú hamburguesa separado */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>

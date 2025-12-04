@@ -52,7 +52,7 @@ const businessHours = [
   { day: "Sábados y Domingos", hours: "09:00 - 17:00", days: [6, 0] },
   {
     day: "Martes, Miércoles",
-    hours: "Estamos cerrados",
+    hours: "",
     days: [2, 3],
   },
 ];
@@ -126,7 +126,7 @@ export default function LocationSection() {
   return (
     <section
       id="ubicacion"
-      className="relative w-full scroll-mt-16 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-20 md:py-28"
+      className="relative w-full scroll-mt-16 bg-gray-50 py-20 md:py-28"
       ref={ref}
     >
       {/* Top Wave */}

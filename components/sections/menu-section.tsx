@@ -4,15 +4,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Star, Wheat, Milk, Egg, Fish, Nut, Bean, Plus, ShoppingCart } from "lucide-react"
+import { Eye, X, Star, Wheat, Milk, Egg, Fish, Nut, Bean } from "lucide-react"
 import Image from "next/image"
 import { motion, useInView } from "framer-motion"
-import { useRef, useState, useMemo, useCallback, memo } from "react"
+import { useRef, useState, useMemo, useCallback } from "react"
 import menuData from "@/data/menu-data.json"
-import type { MenuData, MenuItem, BeverageOrMojo, ComboMeal } from "@/types/menu"
-import ProductModal from "@/components/cart/product-modal"
-import { useCart } from "@/hooks/use-cart"
-// import GlobalSearch from "./global-search"
+import type { MenuData, MenuItem } from "@/types/menu"
+// Cart functionality disabled temporarily
 
 // Allergen icons mapping
 const allergenIcons = {
@@ -32,12 +30,10 @@ const revealVariants = {
   hidden: { 
     opacity: 0,
     y: 30,
-    scale: 0.98,
   },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
       duration: 0.8,
       staggerChildren: 0.1,
@@ -56,7 +52,7 @@ const containerVariants = {
     y: 0,
     transition: {
       duration: 0.6,
-      staggerChildren: 0.1,
+      staggerChildren: 0.05,
       delayChildren: 0.1,
     },
   },
@@ -65,13 +61,13 @@ const containerVariants = {
 const itemVariants = {
   hidden: { 
     opacity: 0, 
-    y: 15
+    x: -20
   },
   visible: {
     opacity: 1,
-    y: 0,
+    x: 0,
     transition: {
-      duration: 0.4,
+      duration: 0.5,
     },
   },
 }
@@ -90,36 +86,31 @@ const headerVariants = {
   },
 }
 
-const tabsVariants = {
-  hidden: { 
-    opacity: 0,
-    y: 10
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-      delay: 0.2,
-    },
-  },
-}
-
 export default function MenuSection() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [activeTab, setActiveTab] = useState("pollos")
-  const [selectedProduct, setSelectedProduct] = useState<MenuItem | BeverageOrMojo | ComboMeal | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const { items } = useCart()
+  const [showFullMenu, setShowFullMenu] = useState(false)
+  const items: never[] = []
 
-  const handleDownloadMenu = useCallback(() => {
-    const link = document.createElement("a")
-    link.href = "/docs/menu-guantanamera.pdf"
-    link.download = "Menu-Guantanamera.pdf"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  const handleViewFullMenu = useCallback(() => {
+    setShowFullMenu(true)
+    // Scroll suave hacia la sección del menú
+    setTimeout(() => {
+      const menuSection = document.getElementById("menu")
+      if (menuSection) {
+        menuSection.scrollIntoView({ behavior: "smooth", block: "start" })
+      }
+    }, 100)
+  }, [])
+
+  const handleCloseFullMenu = useCallback(() => {
+    setShowFullMenu(false)
+    setActiveTab("pollos")
+  }, [])
+
+  const handleViewPDF = useCallback(() => {
+    window.open("/docs/menu-guantanamera.pdf", "_blank", "noopener,noreferrer")
   }, [])
 
   const renderAllergenIcons = useCallback((allergens: string[]) => {
@@ -128,124 +119,126 @@ export default function MenuSection() {
       return (
         <div
           key={allergen}
-          className="flex items-center justify-center w-6 h-6 bg-orange-100 rounded-full"
+          className="flex items-center justify-center w-5 h-5 bg-red-100 rounded-full"
           title={`Contiene ${allergen}`}
         >
-          <IconComponent className="w-3 h-3 text-orange-600" />
+          <IconComponent className="w-3 h-3 text-red-600" />
         </div>
       )
     })
   }, [])
 
-  const handleProductClick = useCallback((product: MenuItem | BeverageOrMojo | ComboMeal) => {
-    setSelectedProduct(product)
-    setIsModalOpen(true)
-  }, [])
+  // Separate beverages that are combined with "|"
+  const separatedBeverages = useMemo(() => {
+    const separated: Array<{
+      name: string
+      description: string
+      price: string
+      allergens: string[]
+    }> = []
 
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false)
-    setSelectedProduct(null)
-  }, [])
-
-  // Función helper para calcular cantidad en carrito de bebidas de selección múltiple
-  const getBeverageCartQuantity = useCallback((beverageName: string): number => {
-    // Si no tiene opciones múltiples, buscar directamente
-    if (!beverageName.includes("|")) {
-      const itemInCart = items.find((cartItem) => cartItem.name === beverageName)
-      return itemInCart?.quantity || 0
-    }
-
-    // Extraer opciones múltiples
-    const match = beverageName.match(/\(([^)]+)\)\s*$/)
-    const size = match ? match[1] : ""
-    
-    // Separar las opciones por "|" y limpiar
-    const options = beverageName.split("|").map(opt => {
-      let cleanOption = opt.trim()
-      cleanOption = cleanOption.replace(/\s*\([^)]+\)\s*$/, "")
-      return size && !cleanOption.includes(size) ? `${cleanOption} (${size})` : cleanOption
-    })
-
-    // Buscar en el carrito si alguna de las opciones está presente y sumar cantidades
-    let totalQuantity = 0
-    options.forEach(option => {
-      const itemInCart = items.find((cartItem) => cartItem.name === option)
-      if (itemInCart) {
-        totalQuantity += itemInCart.quantity
+    bebidasYMojos.bebidas.forEach((beverage) => {
+      if (beverage.name.includes("|")) {
+        // Extract size from name (e.g., "(33cl)", "(1,5L)", "(50cl)")
+        const sizeRegex = /\([^)]+\)/
+        const sizeMatch = sizeRegex.exec(beverage.name)
+        const size = sizeMatch ? sizeMatch[0] : ""
+        
+        // Split by "|" and clean each option
+        const options = beverage.name.split("|").map((opt) => opt.trim())
+        
+        // Create separate items for each option
+        options.forEach((option) => {
+          // Remove size from option if it's duplicated
+          let cleanName = option.replaceAll(/\([^)]+\)/g, "").trim()
+          // Add size at the end
+          cleanName = size ? `${cleanName} ${size}` : cleanName
+          
+          separated.push({
+            name: cleanName,
+            description: beverage.description,
+            price: beverage.price,
+            allergens: beverage.allergens || [],
+          })
+        })
+      } else {
+        // Keep beverage as is
+        separated.push({
+          name: beverage.name,
+          description: beverage.description || "",
+          price: beverage.price,
+          allergens: beverage.allergens || [],
+        })
       }
     })
 
-    return totalQuantity
-  }, [items])
+    return separated
+  }, [])
 
+  // Render decorative separator
+  const renderSeparator = () => (
+    <div className="flex items-center justify-center gap-2 my-8">
+      <div className="h-px bg-red-600/40 w-12"></div>
+      <div className="flex gap-1">
+        <div className="w-1.5 h-1.5 bg-red-600/60 rounded-full"></div>
+        <div className="w-1.5 h-1.5 bg-red-600/60 rounded-full"></div>
+        <div className="w-1.5 h-1.5 bg-red-600/60 rounded-full"></div>
+      </div>
+      <div className="h-px bg-red-600/40 flex-1 max-w-12"></div>
+    </div>
+  )
+
+  // Render menu item in rustic style
   const renderMenuItem = useCallback((item: MenuItem, index: number) => {
-    const itemInCart = items.find((cartItem) => cartItem.name === item.name)
-    const cartQuantity = itemInCart?.quantity || 0
-
     return (
-      <motion.div key={item.name} variants={itemVariants}>
-        <Card className="group overflow-hidden rounded-2xl border-0 bg-white shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-2 h-full cursor-pointer"
-          onClick={() => handleProductClick(item)}
-        >
-          <CardHeader className="p-0 relative">
-            <div className="relative h-48 w-full overflow-hidden">
-              <Image
-                src={item.image || "/placeholder.svg"}
-                alt={item.name}
-                fill
-                className="transition-transform duration-700 group-hover:scale-110 object-cover"
-              />
-              {item.popular && (
-                <Badge className="absolute top-4 right-4 bg-red-600 text-white shadow-lg border-0 px-3 py-1">
-                  <Star className="w-3 h-3 mr-1 fill-current" />
-                  Popular
-                </Badge>
-              )}
+      <motion.div 
+        key={item.name} 
+        variants={itemVariants}
+        className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
+      >
+        {/* Circular Image */}
+        <div className="relative flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden ring-2 ring-red-100">
+          <Image
+            src={item.image || "/placeholder.svg"}
+            alt={item.name}
+            fill
+            className="object-cover"
+          />
+        </div>
 
-              {cartQuantity > 0 && (
-                <Badge className="absolute top-4 left-4 bg-green-600 text-white shadow-lg border-0 px-3 py-1">
-                  <ShoppingCart className="w-3 h-3 mr-1" />
-                  {cartQuantity} en carrito
-                </Badge>
-              )}
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4 mb-1">
+            <h4 className="text-black text-lg md:text-xl font-semibold leading-tight">
+              {item.name}
+            </h4>
+            <span className="text-red-600 text-lg md:text-xl font-bold whitespace-nowrap flex-shrink-0">
+              {item.price}
+            </span>
+          </div>
+          
+          <p className="text-gray-600 text-sm leading-relaxed mb-2">
+            {item.description}
+          </p>
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Allergens */}
+          {item.allergens.length > 0 && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs text-gray-500">Alérgenos:</span>
+              <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
             </div>
-          </CardHeader>
-          <CardContent className="p-6 flex flex-col">
-            <div className="flex justify-between items-start mb-3">
-              <h4 className="text-lg font-bold text-black leading-tight group-hover:text-red-600 transition-colors duration-200">
-                {item.name}
-              </h4>
-              <span className="text-2xl font-bold text-red-600 ml-3">{item.price}</span>
-            </div>
-            <p className="text-gray-600 text-sm mb-4 flex-grow leading-relaxed">{item.description}</p>
+          )}
 
-            {/* Add to Cart Button */}
-            <Button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleProductClick(item)
-              }}
-              className="w-full bg-red-600 text-white hover:bg-red-700 mt-auto rounded-xl font-semibold"
-              size="sm"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
-            </Button>
-
-            {/* Enhanced Allergens */}
-            {item.allergens.length > 0 && (
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-3">
-                <span className="text-sm text-gray-600 font-medium">Alérgenos:</span>
-                <div className="flex gap-2">{renderAllergenIcons(item.allergens)}</div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          {item.popular && (
+            <Badge className="mt-2 bg-red-600 text-white border-0 rounded-lg text-xs px-2 py-0.5">
+              <Star className="w-3 h-3 mr-1 fill-current" />
+              Popular
+            </Badge>
+          )}
+        </div>
       </motion.div>
     )
-  }, [renderAllergenIcons, items, handleProductClick])
+  }, [renderAllergenIcons])
 
   return (
     <motion.section 
@@ -256,318 +249,371 @@ export default function MenuSection() {
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
     >
-      {/* Subtle transition overlay effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-white pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      />
-      
-      {/* Subtle wave transition effect */}
-      <motion.div
-        className="absolute top-0 left-0 right-0 h-20 pointer-events-none"
-        initial={{ y: -30, opacity: 0 }}
-        animate={isInView ? { y: 0, opacity: 1 } : { y: -30, opacity: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      />
-      
-      {/* Subtle entrance overlay */}
-      <motion.div
-        className="absolute inset-0 bg-white pointer-events-none"
-        initial={{ opacity: 1 }}
-        animate={isInView ? { opacity: 0 } : { opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.1 }}
-      />
-      
-      <div className="container mx-auto px-4 md:px-6 max-w-7xl relative z-10">
+      <div className="container mx-auto px-4 md:px-6 max-w-6xl relative z-10">
+        {/* Header */}
         <motion.div
           className="mb-16 text-center"
           variants={headerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <div className="inline-flex items-center gap-2 bg-red-50 px-4 py-2 rounded-full mb-6">
-            <div className="w-2 h-2 bg-red-600 rounded-full"></div>
-            <span className="text-red-600 text-sm font-medium tracking-wide">NUESTRA ESPECIALIDAD</span>
+          <div className="bg-red-50/50 border border-red-100 rounded-full inline-flex items-center gap-2 px-4 py-2 mb-6">
+            <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
+            <span className="text-red-600 text-sm uppercase tracking-[0.2em] font-light">
+              Nuestra Especialidad
+            </span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black mb-6">
+          
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 tracking-tight">
             Carta <span className="text-red-600">Guantanamera</span>
           </h2>
-          <p className="mx-auto max-w-3xl text-lg text-gray-600 leading-relaxed">
-            Descubre nuestras especialidades preparadas con ingredientes frescos y recetas caseras, con la mejor calidad
-            posible, y con el mejor servicio.
+          
+          {renderSeparator()}
+          
+          <p className="mx-auto max-w-2xl text-gray-600 leading-relaxed text-base md:text-lg">
+            Descubre nuestras especialidades preparadas con ingredientes frescos y recetas caseras
           </p>
 
           <motion.div
-            className="mt-8"
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
             variants={itemVariants}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
           >
+            {showFullMenu ? (
+              <Button
+                onClick={handleCloseFullMenu}
+                className="bg-red-600 text-white hover:bg-red-700 transition-all duration-300 px-8 py-3 rounded-lg"
+                size="lg"
+              >
+                <X className="mr-2 h-5 w-5" />
+                Ver por Categorías
+              </Button>
+            ) : (
+              <Button
+                onClick={handleViewFullMenu}
+                className="bg-transparent border-2 border-red-600 text-red-600 hover:bg-red-50 transition-all duration-300 px-8 py-3 rounded-lg"
+                size="lg"
+              >
+                <Eye className="mr-2 h-5 w-5" />
+                Ver Carta Completa
+              </Button>
+            )}
+            
+            {/* Separador "O" */}
+            <span className="text-gray-500 text-lg md:text-xl font-semibold px-2">
+              O
+            </span>
+            
             <Button
-              onClick={handleDownloadMenu}
-              className="bg-red-600 text-white hover:bg-red-700 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3 rounded-full group"
+              onClick={handleViewPDF}
+              className="bg-transparent border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 px-8 py-3 rounded-lg"
               size="lg"
             >
-              <Download className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-              Descargar Carta Completa
+              <Eye className="mr-2 h-5 w-5" />
+              Ver en PDF
             </Button>
           </motion.div>
         </motion.div>
 
-        {/* Enhanced Menu Categories */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Menu Categories Tabs */}
+        {showFullMenu ? (
+          /* Full Menu View - All Categories */
           <motion.div
-            variants={tabsVariants}
+            variants={containerVariants}
             initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            className="mb-12"
+            animate="visible"
+            className="space-y-12"
           >
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-gray-50 border-0 rounded-2xl p-2 h-auto shadow-sm">
-              <TabsTrigger
-                value="pollos"
-                className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md py-4 px-6 text-sm font-semibold rounded-xl transition-all duration-300 hover:bg-white/50"
+            {Object.entries(menuCategories).map(([key, category]) => (
+              <motion.div
+                key={key}
+                variants={containerVariants}
+                className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12"
               >
-                <span className="mr-2 text-lg">🍗</span>
-                <span className="hidden sm:inline">Pollos Asados</span>
-                <span className="sm:hidden">Pollos</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="costillasYPatas"
-                className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md py-4 px-6 text-sm font-semibold rounded-xl transition-all duration-300 hover:bg-white/50"
-              >
-                <span className="mr-2 text-lg">🥩</span>
-                <span className="hidden sm:inline">Costillas y Patas</span>
-                <span className="sm:hidden">Costillas</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="guarniciones"
-                className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md py-4 px-6 text-sm font-semibold rounded-xl transition-all duration-300 hover:bg-white/50"
-              >
-                <span className="mr-2 text-lg">🥗</span>
-                <span className="hidden sm:inline">Guarniciones</span>
-                <span className="sm:hidden">Guarniciones</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="quesadillasYBurritos"
-                className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-md py-4 px-6 text-sm font-semibold rounded-xl transition-all duration-300 hover:bg-white/50"
-              >
-                <span className="mr-2 text-lg">🌯</span>
-                <span className="hidden sm:inline">Quesadillas</span>
-                <span className="sm:hidden">Mexicano</span>
-              </TabsTrigger>
-            </TabsList>
-          </motion.div>
-
-          {Object.entries(menuCategories).map(([key, category]) => (
-            <TabsContent key={key} value={key} className="mt-0">
-              <motion.div variants={containerVariants} initial="hidden" animate={isInView ? "visible" : "hidden"}>
-                <motion.div variants={headerVariants} className="text-center mb-12">
-                  <h3 className="text-3xl font-bold text-black mb-3">{category.title}</h3>
-                  <div className="w-16 h-1 bg-red-600 mx-auto mb-4 rounded-full"></div>
-                  <p className="text-gray-600 text-lg italic max-w-2xl mx-auto">{category.subtitle}</p>
+                {/* Category Header */}
+                <motion.div 
+                  variants={headerVariants}
+                  className="text-center mb-12"
+                >
+                  <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                    {category.title.toUpperCase()}
+                  </p>
+                  {renderSeparator()}
+                  <p className="text-gray-600 text-base italic max-w-2xl mx-auto">
+                    {category.subtitle}
+                  </p>
                 </motion.div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {category.items.map((item, index) => renderMenuItem(item, index))}
+
+                {/* Menu Items Grid - Two Columns */}
+                <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+                  <div className="space-y-0">
+                    {category.items
+                      .filter((_, index) => index % 2 === 0)
+                      .map((item, index) => renderMenuItem(item, index * 2))}
+                  </div>
+                  <div className="space-y-0">
+                    {category.items
+                      .filter((_, index) => index % 2 === 1)
+                      .map((item, index) => renderMenuItem(item, index * 2 + 1))}
+                  </div>
                 </div>
               </motion.div>
-            </TabsContent>
-          ))}
-        </Tabs>
+            ))}
+          </motion.div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <motion.div
+              variants={headerVariants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              className="mb-12"
+            >
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-gray-50 border border-gray-200 rounded-lg p-1 h-auto gap-2">
+                <TabsTrigger
+                  value="pollos"
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                >
+                  <span className="mr-2">🍗</span>
+                  <span className="hidden sm:inline">Pollos</span>
+                  <span className="sm:hidden">Pollos</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="costillasYPatas"
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                >
+                  <span className="mr-2">🥩</span>
+                  <span className="hidden sm:inline">Costillas</span>
+                  <span className="sm:hidden">Costillas</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="guarniciones"
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                >
+                  <span className="mr-2">🥗</span>
+                  <span className="hidden sm:inline">Guarniciones</span>
+                  <span className="sm:hidden">Guarniciones</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="quesadillasYBurritos"
+                  className="data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:border-red-600 border border-transparent rounded-lg py-3 px-4 text-sm font-semibold transition-all duration-300 hover:bg-gray-100 text-gray-700"
+                >
+                  <span className="mr-2">🌯</span>
+                  <span className="hidden sm:inline">Mexicano</span>
+                  <span className="sm:hidden">Mexicano</span>
+                </TabsTrigger>
+              </TabsList>
+            </motion.div>
 
-        {/* Enhanced Combo Meals Section */}
+            {/* Tab Content */}
+            {Object.entries(menuCategories).map(([key, category]) => (
+              <TabsContent key={key} value={key} className="mt-0">
+                <motion.div 
+                  variants={containerVariants} 
+                  initial="hidden" 
+                  animate={isInView ? "visible" : "hidden"}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12"
+                >
+                  {/* Category Header */}
+                  <motion.div 
+                    variants={headerVariants}
+                    className="text-center mb-12"
+                  >
+                    <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                      {category.title.toUpperCase()}
+                    </p>
+                    {renderSeparator()}
+                    <p className="text-gray-600 text-base italic max-w-2xl mx-auto">
+                      {category.subtitle}
+                    </p>
+                  </motion.div>
+
+                  {/* Menu Items Grid - Two Columns */}
+                  <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+                    <div className="space-y-0">
+                      {category.items
+                        .filter((_, index) => index % 2 === 0)
+                        .map((item, index) => renderMenuItem(item, index * 2))}
+                    </div>
+                    <div className="space-y-0">
+                      {category.items
+                        .filter((_, index) => index % 2 === 1)
+                        .map((item, index) => renderMenuItem(item, index * 2 + 1))}
+                    </div>
+                  </div>
+                </motion.div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
+
+        {/* Combo Meals Section */}
         <motion.div
-          className="mt-20 text-center"
+          className="mt-20"
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          <div className="relative bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 rounded-3xl p-10 shadow-lg border border-red-100 max-w-6xl mx-auto">
-            <motion.div variants={headerVariants} className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full mb-6 shadow-sm">
-              <span className="text-2xl">🍽️</span>
-              <span className="text-red-600 font-semibold">OFERTAS</span>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+            <motion.div 
+              variants={headerVariants}
+              className="text-center mb-12"
+            >
+              <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                Ofertas Especiales
+              </p>
+              {renderSeparator()}
             </motion.div>
-            <motion.h3 variants={itemVariants} className="text-3xl font-bold text-black mb-8">Ofertas Especiales para nuestros clientes</motion.h3>
-            <div className="grid md:grid-cols-3 gap-8">
-              {comboMeals.map((combo, index) => {
-                const comboInCart = items.find((cartItem) => cartItem.name === combo.name)
-                const cartQuantity = comboInCart?.quantity || 0
-                
-                return (
-                  <motion.div 
-                    key={combo.name} 
-                    variants={itemVariants}
-                    className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 group flex flex-col relative cursor-pointer"
-                    onClick={() => handleProductClick(combo)}
-                  >
-                    {cartQuantity > 0 && (
-                      <Badge className="absolute top-4 left-4 bg-green-600 text-white shadow-lg border-0 px-3 py-1 z-10">
-                        <ShoppingCart className="w-3 h-3 mr-1" />
-                        {cartQuantity} en carrito
-                      </Badge>
-                    )}
-                    
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-200 transition-colors">
-                      <span className="text-2xl">{combo.icon}</span>
-                    </div>
-                    <h4 className="font-bold text-gray-800 mb-2 text-xl">{combo.name}</h4>
-                    <p className="text-gray-600 mb-4 flex-grow">{combo.description}</p>
-                    <span className="text-3xl font-bold text-red-600 mb-4">{combo.price}</span>
-                    
-                    {/* Botón Agregar al Carrito */}
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleProductClick(combo)
-                      }}
-                      className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
-                      size="sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
-                    </Button>
-                  </motion.div>
-                )
-              })}
-            </div>
 
-            {/* Enhanced Allergen Legend */}
-            <div className="mt-10 pt-8 border-t border-red-200">
-              <h4 className="text-lg font-semibold text-gray-700 mb-6">Información de Alérgenos</h4>
-              <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
-                <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm">
-                  <Wheat className="w-4 h-4 text-orange-600" />
-                  <span>Gluten</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm">
-                  <Milk className="w-4 h-4 text-orange-600" />
-                  <span>Lácteos</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm">
-                  <Egg className="w-4 h-4 text-orange-600" />
-                  <span>Huevos</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm">
-                  <Nut className="w-4 h-4 text-orange-600" />
-                  <span>Frutos Secos</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-sm">
-                  <Bean className="w-4 h-4 text-orange-600" />
-                  <span>Soja</span>
-                </div>
-              </div>
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-500 italic leading-relaxed">
-                  * Todos los precios incluyen IGIC. Consulta disponibilidad de platos del día.
-                  <br />
-                  ** Si tienes alguna alergia alimentaria, por favor informa a nuestro personal.
-                </p>
-              </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {comboMeals.map((combo, index) => (
+                <motion.div
+                  key={combo.name}
+                  variants={itemVariants}
+                  className="bg-white border border-gray-200 rounded-xl p-6 text-center"
+                >
+                  <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-3xl">{combo.icon}</span>
+                  </div>
+                  <h4 className="font-bold text-black mb-2 text-xl">{combo.name}</h4>
+                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">{combo.description}</p>
+                  <span className="text-red-600 text-2xl font-bold">{combo.price}</span>
+                </motion.div>
+              ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Enhanced Mojos and Beverages Section */}
+        {/* Mojos and Beverages */}
         <motion.div
-          className="mt-16 space-y-10"
+          className="mt-12 space-y-8"
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
           {/* Mojos */}
-          <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
-            <motion.div variants={headerVariants} className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 bg-red-50 px-4 py-2 rounded-full mb-4">
-                <span className="text-2xl">🥄</span>
-                <span className="text-red-600 font-semibold">MOJOS CASEROS</span>
-              </div>
-              <h3 className="text-2xl font-bold text-black">Salsas Tradicionales</h3>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+            <motion.div 
+              variants={headerVariants}
+              className="text-center mb-8"
+            >
+              <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                Mojos Caseros
+              </p>
+              {renderSeparator()}
             </motion.div>
-            <div className="grid md:grid-cols-3 gap-4">
-              {bebidasYMojos.mojos.map((item, index) => {
-                const itemInCart = items.find((cartItem) => cartItem.name === item.name)
-                const cartQuantity = itemInCart?.quantity || 0
-                
-                return (
-                  <motion.div
-                    key={item.name}
-                    variants={itemVariants}
-                    className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors duration-200 flex flex-col"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h5 className="font-semibold text-gray-800 text-lg">{item.name}</h5>
-                      <span className="text-xl font-bold text-red-600">{item.price}</span>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bebidasYMojos.mojos.map((item) => (
+                <motion.div
+                  key={item.name}
+                  variants={itemVariants}
+                  className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-1">
+                      <h5 className="font-semibold text-black text-base">{item.name}</h5>
+                      <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
+                        {item.price}
+                      </span>
                     </div>
-                    <p className="text-gray-600 text-sm mb-3 flex-grow">{item.description}</p>
-                    
-                    {/* Botón Agregar al Carrito */}
-                    <Button
-                      onClick={() => handleProductClick(item)}
-                      className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
-                      size="sm"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
-                    </Button>
-                  </motion.div>
-                )
-              })}
+                    <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
 
           {/* Beverages */}
-          <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 bg-red-50 px-4 py-2 rounded-full mb-4">
-                <span className="text-2xl">🍺</span>
-                <span className="text-red-600 font-semibold">BEBIDAS</span>
-              </div>
-              <h3 className="text-2xl font-bold text-black">Selección de Bebidas</h3>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {bebidasYMojos.bebidas.map((item) => {
-                const cartQuantity = getBeverageCartQuantity(item.name)
-                
-                return (
-                  <div
-                    key={item.name}
-                    className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-colors duration-200 flex flex-col"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h5 className="font-semibold text-gray-800">{item.name}</h5>
-                      <span className="text-lg font-bold text-red-600">{item.price}</span>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-3 flex-grow">{item.description}</p>
-                    <div className="flex items-center justify-between mb-3">
-                      {item.allergens.length > 0 && (
-                        <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
-                      )}
-                    </div>
-                    
-                    {/* Botón Agregar al Carrito */}
-                    <Button
-                      onClick={() => handleProductClick(item)}
-                      className="w-full bg-red-600 text-white hover:bg-red-700 rounded-xl font-semibold mt-auto"
-                      size="sm"
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 md:p-12">
+            <motion.div 
+              variants={headerVariants}
+              className="text-center mb-8"
+            >
+              <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                Bebidas
+              </p>
+              {renderSeparator()}
+            </motion.div>
+            
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+              <div className="space-y-0">
+                {separatedBeverages
+                  .filter((_, index) => index % 2 === 0)
+                  .map((item, index) => (
+                    <motion.div
+                      key={`${item.name}-${index * 2}`}
+                      variants={itemVariants}
+                      className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {cartQuantity > 0 ? `Agregar más (${cartQuantity})` : "Agregar al carrito"}
-                    </Button>
-                  </div>
-                )
-              })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-1">
+                          <h5 className="font-semibold text-black text-base">{item.name}</h5>
+                          <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
+                            {item.price}
+                          </span>
+                        </div>
+                        {item.description && (
+                          <p className="text-gray-600 text-sm leading-relaxed mb-2">{item.description}</p>
+                        )}
+                        {item.allergens.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-gray-500">Alérgenos:</span>
+                            <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
+              <div className="space-y-0">
+                {separatedBeverages
+                  .filter((_, index) => index % 2 === 1)
+                  .map((item, index) => (
+                    <motion.div
+                      key={`${item.name}-${index * 2 + 1}`}
+                      variants={itemVariants}
+                      className="flex items-start gap-4 py-4 border-b border-gray-200 last:border-b-0"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-1">
+                          <h5 className="font-semibold text-black text-base">{item.name}</h5>
+                          <span className="text-red-600 font-bold whitespace-nowrap flex-shrink-0">
+                            {item.price}
+                          </span>
+                        </div>
+                        {item.description && (
+                          <p className="text-gray-600 text-sm leading-relaxed mb-2">{item.description}</p>
+                        )}
+                        {item.allergens.length > 0 && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-gray-500">Alérgenos:</span>
+                            <div className="flex gap-1">{renderAllergenIcons(item.allergens)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
             </div>
           </div>
         </motion.div>
-      </div>
 
-      {/* Product Modal */}
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        product={selectedProduct}
-      />
+        {/* Footer Note */}
+        <motion.div
+          className="mt-12 text-center text-gray-500 text-sm"
+          variants={headerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
+          <p className="italic">
+            * Todos los precios incluyen IGIC. Consulta disponibilidad de platos del día.
+          </p>
+          <p className="italic mt-2">
+            ** Si tienes alguna alergia alimentaria, por favor informa a nuestro personal.
+          </p>
+        </motion.div>
+      </div>
     </motion.section>
   )
 }

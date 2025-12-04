@@ -1,22 +1,38 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Phone, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useThrottle } from "@/hooks/use-throttle"
 
 export default function FloatingCallButton() {
   const [isVisible, setIsVisible] = useState(false)
   const [isClosed, setIsClosed] = useState(false)
 
-  useEffect(() => {
-    // Show the button after a short delay to avoid immediate appearance
-    const timer = setTimeout(() => {
-      setIsVisible(true)
-    }, 2000)
-
-    return () => clearTimeout(timer)
+  const toggleVisibility = useCallback(() => {
+    setIsVisible(window.pageYOffset > 300)
   }, [])
+
+  // Throttle scroll listener para mejor rendimiento
+  const throttledToggleVisibility = useThrottle(toggleVisibility, 150)
+  
+  // Usar ref para mantener una referencia estable a la función throttled
+  const throttledRef = useRef(throttledToggleVisibility)
+  throttledRef.current = throttledToggleVisibility
+
+  useEffect(() => {
+    // Función wrapper que usa la ref para acceder a la versión más reciente
+    const handleScroll = () => {
+      throttledRef.current()
+    }
+
+    window.addEventListener("scroll", handleScroll)
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, []) // Array vacío porque la función wrapper es estable y usa la ref
 
   const handleCall = () => {
     window.location.href = "tel:922173039"

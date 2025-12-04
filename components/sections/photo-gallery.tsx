@@ -2,34 +2,74 @@
 
 import Image from "next/image";
 import { motion, easeOut, useInView, AnimatePresence } from "framer-motion";
-import { useRef, useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import { X, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Wave } from "@/components/ui/wave";
 import galleryData from "@/data/gallery-data.json";
 import { GalleryImage } from "@/types/gallery";
 
+// Componente de video optimizado que se carga cuando está visible
+function LazyVideo({ src, className }: { readonly src: string; readonly className?: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const isInView = useInView(videoRef, { once: true, margin: "100px" });
+
+  useEffect(() => {
+    if (isInView && videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().catch(() => {
+        // Ignorar errores de autoplay (algunos navegadores lo bloquean)
+      });
+    }
+  }, [isInView]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      className={className}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      autoPlay
+    />
+  );
+}
+
 const images: GalleryImage[] = galleryData.images;
+
+// Límite de imágenes a mostrar inicialmente en el bento grid
+const INITIAL_IMAGES_LIMIT = 6;
+
+// Layout del bento grid (definido manualmente para mejor control)
+const bentoLayout = [
+  { col: "col-span-2", row: "row-span-2" }, // Imagen grande (2x2)
+  { col: "col-span-1", row: "row-span-1" }, // Imagen pequeña (1x1)
+  { col: "col-span-1", row: "row-span-1" }, // Imagen pequeña (1x1)
+  { col: "col-span-1", row: "row-span-1" }, // Imagen pequeña (1x1)
+  { col: "col-span-1", row: "row-span-2" }, // Imagen vertical (1x2)
+  { col: "col-span-2", row: "row-span-1" }, // Imagen horizontal (2x1)
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
     },
   },
 };
 
 const imageVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.9 },
+  hidden: { opacity: 0, scale: 0.95 },
   visible: {
     opacity: 1,
-    y: 0,
     scale: 1,
     transition: {
-      duration: 0.6,
+      duration: 0.5,
       ease: easeOut,
     },
   },
@@ -60,38 +100,50 @@ export default function PhotoGallery() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAllImages, setShowAllImages] = useState(false);
 
-  const openLightbox = (image: GalleryImage, index: number) => {
+  // Memoizar las imágenes visibles para optimizar rendimiento
+  const visibleImages = useMemo(() => {
+    return showAllImages ? images : images.slice(0, INITIAL_IMAGES_LIMIT);
+  }, [showAllImages]);
+
+  const hasMoreImages = images.length > INITIAL_IMAGES_LIMIT;
+
+  const openLightbox = useCallback((image: GalleryImage, index: number) => {
     setSelectedImage(image);
     setCurrentIndex(index);
-  };
+  }, []);
 
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setSelectedImage(null);
-  };
+  }, []);
 
-  const nextImage = () => {
+  const nextImage = useCallback(() => {
     const nextIndex = (currentIndex + 1) % images.length;
     setCurrentIndex(nextIndex);
     setSelectedImage(images[nextIndex]);
-  };
+  }, [currentIndex]);
 
-  const prevImage = () => {
+  const prevImage = useCallback(() => {
     const prevIndex = (currentIndex - 1 + images.length) % images.length;
     setCurrentIndex(prevIndex);
     setSelectedImage(images[prevIndex]);
-  };
+  }, [currentIndex]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") closeLightbox();
     if (e.key === "ArrowRight") nextImage();
     if (e.key === "ArrowLeft") prevImage();
-  };
+  }, [closeLightbox, nextImage, prevImage]);
+
+  const handleViewMore = useCallback(() => {
+    setShowAllImages(true);
+  }, []);
 
   return (
     <section
       id="galeria"
-      className="relative w-full scroll-mt-16 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 py-20 md:py-28"
+      className="relative w-full scroll-mt-16 bg-gray-50 py-20 md:py-28"
       ref={ref}
     >
       {/* Top Wave */}
@@ -124,130 +176,125 @@ export default function PhotoGallery() {
           </p>
         </motion.div>
 
-        {/* Responsive Grid Gallery */}
+        {/* Bento Grid Gallery */}
         <motion.div
           className="mb-8"
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
         >
-          {/* Mobile Grid - Simple layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:hidden gap-6">
-            {images.map((image, index) => (
+          {/* Mobile Grid - Simple 2 column layout */}
+          <div className="grid grid-cols-2 lg:hidden gap-3">
+            {visibleImages.slice(0, 4).map((image, index) => (
               <motion.div
-                key={index + image.alt}
-                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white"
+                key={`mobile-${index}-${image.alt}`}
+                className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-white aspect-square"
                 variants={imageVariants}
-                onClick={() => openLightbox(image, index)}
+                onClick={() => openLightbox(image, images.indexOf(image))}
               >
-                <div className="relative w-full aspect-square">
-                  {image.isVideo ? (
-                    <video
-                      src={image.src}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      muted
-                      loop
-                      playsInline
-                      autoPlay
-                    />
-                  ) : (
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      width={400}
-                      height={400}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <span className="inline-block bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
-                        {image.category}
-                      </span>
-                      <p className="text-white text-sm font-medium leading-tight mb-2">
-                        {image.alt}
-                      </p>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        {image.isVideo ? (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
-                          </svg>
-                        )}
-                      </div>
-                    </div>
+                {image.isVideo ? (
+                  <LazyVideo
+                    src={image.src}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading={index < 2 ? "eager" : "lazy"}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <span className="inline-block bg-red-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                      {image.category}
+                    </span>
                   </div>
-                  <div className="absolute inset-0 border-2 border-red-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
               </motion.div>
             ))}
+            {!showAllImages && hasMoreImages && (
+              <motion.button
+                className="group relative overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-br from-red-600 to-orange-600 aspect-square flex flex-col items-center justify-center text-white"
+                variants={imageVariants}
+                onClick={handleViewMore}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Plus className="w-8 h-8 mb-2" />
+                <span className="text-sm font-semibold">Ver más</span>
+                <span className="text-xs opacity-90 mt-1">
+                  +{images.length - INITIAL_IMAGES_LIMIT} más
+                </span>
+              </motion.button>
+            )}
           </div>
 
-          {/* Desktop Grid - Original layout with specific positions */}
-          <div className="hidden lg:grid grid-cols-8 gap-3" style={{ minHeight: '350px' }}>
-            {images.map((image, index) => (
-              <motion.div
-                key={index + image.alt}
-                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white"
-                style={{
-                  gridColumn: `${image.x + 1} / span ${image.w}`,
-                  gridRow: `${image.y + 1} / span ${image.h}`,
-                }}
-                variants={imageVariants}
-                onClick={() => openLightbox(image, index)}
-              >
-                <div className="relative w-full h-full">
+          {/* Desktop Bento Grid */}
+          <div className="hidden lg:grid grid-cols-4 grid-rows-3 gap-3 auto-rows-fr" style={{ minHeight: '600px' }}>
+            {visibleImages.map((image, index) => {
+              // Usar layout bento solo para las primeras imágenes, luego grid uniforme
+              const useBentoLayout = index < bentoLayout.length && !showAllImages;
+              const layout = useBentoLayout ? bentoLayout[index] : { col: "col-span-1", row: "row-span-1" };
+              const actualIndex = images.indexOf(image);
+              
+              return (
+                <motion.div
+                  key={`desktop-${actualIndex}-${image.alt}`}
+                  className={`group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-white ${layout.col} ${layout.row}`}
+                  variants={imageVariants}
+                  onClick={() => openLightbox(image, actualIndex)}
+                  whileHover={{ scale: 1.02 }}
+                >
                   {image.isVideo ? (
-                    <video
+                    <LazyVideo
                       src={image.src}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      muted
-                      loop
-                      playsInline
-                      autoPlay
                     />
                   ) : (
                     <Image
                       src={image.src}
                       alt={image.alt}
-                      width={400}
-                      height={400}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      style={{ aspectRatio: '1 / 1' }}
+                      fill
+                      sizes="(max-width: 1024px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading={index < 3 ? "eager" : "lazy"}
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
                     <div className="absolute bottom-4 left-4 right-4">
-                      <span className="inline-block bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                      <span className="inline-block bg-red-600 text-white text-xs font-semibold px-3 py-1 rounded-full mb-2">
                         {image.category}
                       </span>
-                      <p className="text-white text-sm font-medium leading-tight mb-2">
+                      <p className="text-white text-sm font-medium leading-tight">
                         {image.alt}
                       </p>
                     </div>
-                    <div className="absolute top-4 right-4">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        {image.isVideo ? (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
-                          </svg>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                  <div className="absolute inset-0 border-2 border-red-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
+            
+            {/* Celda "Ver más" en esquina inferior derecha */}
+            {!showAllImages && hasMoreImages && (
+              <motion.button
+                className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer bg-gradient-to-br from-red-600 via-red-700 to-orange-600 col-span-1 row-span-1 flex flex-col items-center justify-center text-white"
+                variants={imageVariants}
+                onClick={handleViewMore}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                <Plus className="w-12 h-12 mb-3 relative z-10" strokeWidth={2.5} />
+                <span className="text-lg font-bold relative z-10">Ver más</span>
+                <span className="text-sm opacity-90 mt-1 relative z-10">
+                  +{images.length - INITIAL_IMAGES_LIMIT} más
+                </span>
+              </motion.button>
+            )}
           </div>
         </motion.div>
 

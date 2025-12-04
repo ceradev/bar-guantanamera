@@ -159,7 +159,7 @@ export default function OrderSection() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-8 shadow-lg border border-red-100 max-w-4xl mx-auto overflow-hidden transition-all duration-300 hover:shadow-xl">
+              <div className="bg-gray-50 rounded-3xl p-8 shadow-lg border border-red-100 max-w-4xl mx-auto overflow-hidden transition-all duration-300 hover:shadow-xl">
                 <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Utensils className="w-8 h-8 text-white" />
                 </div>
@@ -173,7 +173,8 @@ export default function OrderSection() {
                   que solo encuentras en nuestra web.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <Button
+                  {/* Botones de pedido online - Próximamente */}
+                  {/* <Button
                     asChild
                     className="bg-red-600 text-white hover:bg-red-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                     size="lg"
@@ -192,7 +193,20 @@ export default function OrderSection() {
                     <Link href="/carrito">
                       Ver Carrito
                     </Link>
-                  </Button>
+                  </Button> */}
+                  
+                  {/* Mensaje de Próximamente */}
+                  <motion.div
+                    className="flex items-center gap-2 px-6 py-3 bg-red-50 border-2 border-red-200 rounded-full text-red-700"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Clock className="w-5 h-5" />
+                    <span className="font-semibold text-sm md:text-base">
+                      Pedido Online - Próximamente
+                    </span>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
