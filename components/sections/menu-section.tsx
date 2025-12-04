@@ -340,10 +340,10 @@ export default function MenuSection() {
                 variants={headerVariants}
                 className="text-center mb-12"
               >
-                <h3 className="text-3xl md:text-4xl font-bold text-black mb-4">
+                <h3 className="text-2xl md:text-3xl font-bold text-black mb-4">
                   Nuestros Platos Más Populares
                 </h3>
-                <p className="text-gray-600 text-base md:text-lg max-w-xl mx-auto">
+                <p className="text-gray-600 text-sm md:text-base max-w-xl mx-auto">
                   Descubre los platos favoritos de nuestros clientes, preparados con ingredientes frescos y nuestra receta casera tradicional
                 </p>
               </motion.div>
@@ -420,6 +420,17 @@ export default function MenuSection() {
             animate="visible"
             className="space-y-12"
           >
+            <motion.div
+              variants={headerVariants}
+              className="text-center mb-12"
+            >
+              <div className="text-center mb-8">
+                <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                  Menú Principal
+                </p>
+                {renderSeparator()}
+              </div>
+            </motion.div>
             {Object.entries(menuCategories).map(([key, category]) => (
               <motion.div
                 key={key}
@@ -431,11 +442,11 @@ export default function MenuSection() {
                   variants={headerVariants}
                   className="text-center mb-12"
                 >
-                  <h3 className="text-black text-2xl md:text-3xl font-bold mb-2">
+                  <h3 className="text-black text-xl md:text-2xl font-bold mb-2">
                     {category.title}
                   </h3>
                   <div className="h-1 bg-red-600 w-24 mx-auto mb-4 rounded-full"></div>
-                  <p className="text-gray-600 text-base md:text-lg italic max-w-2xl mx-auto">
+                  <p className="text-gray-600 text-sm md:text-base italic max-w-2xl mx-auto">
                     {category.subtitle}
                   </p>
                 </motion.div>
@@ -455,6 +466,12 @@ export default function MenuSection() {
               animate={isInView ? "visible" : "hidden"}
               className="mb-12"
             >
+              <div className="text-center mb-8">
+                <p className="text-red-600 text-sm uppercase tracking-[0.2em] mb-4 font-semibold">
+                  Menú Principal
+                </p>
+                {renderSeparator()}
+              </div>
               <TabsList className="flex flex-wrap items-center justify-center gap-3 md:gap-4 bg-transparent border-0 p-0 h-auto">
                 <TabsTrigger
                   value="pollos"
@@ -497,11 +514,11 @@ export default function MenuSection() {
                     variants={headerVariants}
                     className="text-center mb-12"
                   >
-                    <h3 className="text-black text-2xl md:text-3xl font-bold mb-2">
+                    <h3 className="text-black text-xl md:text-2xl font-bold mb-2">
                       {category.title}
                     </h3>
                     <div className="h-1 bg-red-600 w-24 mx-auto mb-4 rounded-full"></div>
-                    <p className="text-gray-600 text-base md:text-lg italic max-w-2xl mx-auto">
+                    <p className="text-gray-600 text-sm md:text-base italic max-w-2xl mx-auto">
                       {category.subtitle}
                     </p>
                   </motion.div>

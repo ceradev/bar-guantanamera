@@ -208,19 +208,19 @@
       {
         "name": "Mojo Rojo Picante Casero",
         "description": "",
-        "price": "1.00€",
+        "price": "1.20€",
         "allergens": []
       },
       {
         "name": "Mojo Verde Casero",
         "description": "",
-        "price": "1.00€",
+        "price": "1.20€",
         "allergens": []
       },
       {
         "name": "Alioli Tradicional Casero",
         "description": "",
-        "price": "1.00€",
+        "price": "1.20€",
         "allergens": ["eggs"]
       }
     ]
