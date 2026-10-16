@@ -2,7 +2,6 @@
 
 import { useMemo } from "react"
 import { motion } from "framer-motion"
-import { CupSoda, Beer, GlassWater } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Beverage } from "@/types/menu"
 import { staggerContainer, fadeInUp } from "./animations"
@@ -36,33 +35,33 @@ export const DrinksSection = ({ beverages }: DrinksSectionProps) => {
     <motion.div variants={staggerContainer} className="h-full">
       <motion.div 
         variants={fadeInUp as any}
-        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-10 h-full w-full"
+        className="bg-card rounded-2xl shadow-sm border border-border p-8 md:p-10 h-full w-full"
       >
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 text-center">
+          <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2 text-center">
             Bebidas
           </h3>
-          <div className="w-16 h-1.5 bg-red-600 rounded-full" />
+          <div className="w-16 h-1.5 bg-primary rounded-full" />
         </div>
 
         <Tabs defaultValue="refrescos" className="w-full">
-          <TabsList className="flex flex-wrap h-auto bg-gray-50/50 rounded-full p-1 mb-6 md:mb-8 justify-center gap-1 w-fit mx-auto border border-gray-100">
+          <TabsList className="flex flex-wrap h-auto bg-secondary/40 rounded-full p-1 mb-6 md:mb-8 justify-center gap-1 w-fit mx-auto border border-border">
             <TabsTrigger
               value="refrescos"
-              className="rounded-full px-3 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm transition-all text-gray-500"
+              className="rounded-full px-3 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground"
             >
               Refrescos
             </TabsTrigger>
             <TabsTrigger
               value="cervezas"
-              className="rounded-full px-3 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm transition-all text-gray-500"
+              className="rounded-full px-3 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground"
             >
               Cervezas
             </TabsTrigger>
             <TabsTrigger
               value="agua"
-              className="rounded-full px-3 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all text-gray-500"
+              className="rounded-full px-3 py-1 md:px-5 md:py-1.5 text-xs md:text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all text-muted-foreground"
             >
               Agua
             </TabsTrigger>
@@ -74,12 +73,12 @@ export const DrinksSection = ({ beverages }: DrinksSectionProps) => {
                 {drinks.map((drink) => (
                   <div 
                     key={drink.name}
-                    className="flex justify-between items-center py-3 border-b border-gray-100 hover:bg-gray-50/50 transition-colors px-2 rounded-lg group"
+                    className="flex justify-between items-center py-3 border-b border-border/60 hover:bg-secondary/40 transition-colors px-2 rounded-lg group"
                   >
-                    <span className="text-gray-800 font-medium text-sm md:text-base group-hover:text-red-600 transition-colors">
+                    <span className="text-foreground font-medium text-sm md:text-base group-hover:text-primary transition-colors">
                       {drink.name}
                     </span>
-                    <span className="text-red-600 font-bold text-sm md:text-base whitespace-nowrap ml-4">
+                    <span className="text-primary font-bold text-sm md:text-base whitespace-nowrap ml-4">
                       {drink.price}
                     </span>
                   </div>

@@ -2,7 +2,7 @@ import type React from "react";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/config/site";
-import { bowlbyOne, montserrat, openSans } from "@/lib/fonts";
+import { bowlbyOne, inter, leagueSpartan } from "@/lib/fonts";
 import { RootProvider } from "@/components/providers/root-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -46,8 +46,8 @@ export default function RootLayout({
       <body
         className={cn(
           "bg-background font-sans text-foreground antialiased",
-          montserrat.variable,
-          openSans.variable,
+          leagueSpartan.variable,
+          inter.variable,
           bowlbyOne.variable
         )}
       >

@@ -28,24 +28,24 @@ export const CategoryDetail = ({
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="bg-gray-50 rounded-3xl p-6 md:p-10 border border-gray-100 shadow-inner"
+        className="bg-secondary/30 rounded-3xl p-6 md:p-10 border border-border shadow-inner"
       >
         <div className="flex justify-between items-center mb-10">
           <div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-2">
+            <h3 className="text-3xl font-bold text-foreground mb-2">
               {menuCategories[activeCategory].title}
             </h3>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground font-body">
               {menuCategories[activeCategory].subtitle}
             </p>
           </div>
           <Button 
             variant="ghost" 
             onClick={onClose}
-            className="hover:bg-gray-200 rounded-full p-2 h-auto"
+            className="hover:bg-secondary rounded-full p-2 h-auto"
             aria-label="Cerrar categoría"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-6 h-6 text-muted-foreground" />
           </Button>
         </div>
 
@@ -54,7 +54,7 @@ export const CategoryDetail = ({
             <motion.div
               key={item.name}
               variants={fadeInUp as any}
-              className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 group"
+              className="bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-border transition-shadow duration-300 group"
             >
               <div className="relative h-48 overflow-hidden">
                 <Image
@@ -66,17 +66,17 @@ export const CategoryDetail = ({
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-wrap gap-2">
                   {item.popular && (
-                    <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-500 border-0 flex gap-1 items-center">
-                      <Star className="w-3 h-3 fill-yellow-900" /> Popular
+                    <Badge className="bg-amber-400 text-amber-950 hover:bg-amber-500 border-0 flex gap-1 items-center">
+                      <Star className="w-3 h-3 fill-amber-950" /> Popular
                     </Badge>
                   )}
                   {item.spicy && (
-                    <Badge className="bg-red-500 text-white hover:bg-red-600 border-0 flex gap-1 items-center">
+                    <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90 border-0 flex gap-1 items-center">
                       <Flame className="w-3 h-3" /> Picante
                     </Badge>
                   )}
                   {item.vegetarian && (
-                    <Badge className="bg-green-500 text-white hover:bg-green-600 border-0 flex gap-1 items-center">
+                    <Badge className="bg-green-600 text-white hover:bg-green-700 border-0 flex gap-1 items-center">
                       <Leaf className="w-3 h-3" /> Veggie
                     </Badge>
                   )}
@@ -85,15 +85,15 @@ export const CategoryDetail = ({
 
               <div className="p-5">
                 <div className="flex justify-between items-start gap-4 mb-2">
-                  <h4 className="font-bold text-gray-900 text-lg leading-tight">
+                  <h4 className="font-bold text-foreground text-lg leading-tight">
                     {item.name}
                   </h4>
-                  <span className="font-bold text-red-600 text-lg whitespace-nowrap">
+                  <span className="font-bold text-primary text-lg whitespace-nowrap">
                     {item.price}
                   </span>
                 </div>
                 {item.description && (
-                  <p className="text-gray-500 text-sm mt-2">
+                  <p className="text-muted-foreground font-body text-sm mt-2">
                     {item.description}
                   </p>
                 )}

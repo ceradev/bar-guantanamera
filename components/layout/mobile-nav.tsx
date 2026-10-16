@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 import { navLinks, deliveryLinks } from "@/config/site"
 
 
-export function MobileNav() {
+export function MobileNav({ triggerClassName }: { triggerClassName?: string } = {}) {
     const [open, setOpen] = useState(false)
     const pathname = usePathname()
 
@@ -38,7 +38,7 @@ export function MobileNav() {
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
                 <button
-                    className="p-2 text-foreground hover:text-primary transition-colors"
+                    className={cn("p-2 text-foreground hover:text-primary transition-colors", triggerClassName)}
                     aria-label="Abrir menu"
                 >
                     <Menu className="h-7 w-7" />

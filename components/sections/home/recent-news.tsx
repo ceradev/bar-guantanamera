@@ -61,7 +61,7 @@ export default function RecentNews() {
   }
 
   return (
-    <section className="py-20 bg-background">
+    <section id="novedades" className="py-20 bg-background scroll-mt-24">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           className="text-center mb-12"

@@ -270,7 +270,7 @@ export default function ContactContent() {
                   </p>
                 )}
                 {submitStatus === "error" && (
-                  <p className="text-sm text-red-600 font-medium">
+                  <p className="text-sm text-destructive font-medium">
                     Hubo un error al enviar el mensaje. Inténtalo de nuevo.
                   </p>
                 )}

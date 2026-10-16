@@ -10,9 +10,10 @@ export const siteConfig = {
 }
 
 export const navLinks = [
-    { href: "/sobre-nosotros", label: "SOBRE NOSOTROS" },
-    { href: "/menu", label: "MENU" },
-    { href: "/contacto", label: "CONTACTO" },
+    { href: "/menu", label: "Carta" },
+    { href: "/menu#combos", label: "Combos" },
+    { href: "/#novedades", label: "Novedades" },
+    { href: "/contacto", label: "Ubicación" },
 ]
 
 export const deliveryLinks = [
@@ -27,3 +28,4 @@ export const deliveryLinks = [
         external: true,
     },
 ]
+

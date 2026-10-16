@@ -2,8 +2,6 @@
 
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Star } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { MenuItem } from "@/types/menu"
 import { fadeInUp, staggerContainer } from "./animations"
 
@@ -17,10 +15,10 @@ export const IconicDishes = ({ items }: IconicDishesProps) => (
       variants={fadeInUp as any}
       className="flex flex-col items-center mb-8"
     >
-      <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
+      <h3 className="text-2xl font-bold text-foreground mb-2 text-center">
         Platos Icónicos
       </h3>
-      <div className="w-16 h-1 bg-red-600 rounded-full" />
+      <div className="w-16 h-1 bg-primary rounded-full" />
     </motion.div>
 
     <div className="grid md:grid-cols-3 gap-6">
@@ -40,7 +38,7 @@ export const IconicDishes = ({ items }: IconicDishesProps) => (
 
           <div className="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
             <h4 className="text-xl font-bold mb-1 leading-tight">{item.name}</h4>
-            <p className="text-red-400 font-bold text-lg">{item.price}</p>
+            <p className="text-primary font-bold text-lg">{item.price}</p>
           </div>
         </motion.div>
       ))}

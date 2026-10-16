@@ -69,7 +69,7 @@ export default function BackToTopButton() {
             variant="default"
             size="icon"
             onClick={scrollToTop}
-            className="h-12 w-12 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             aria-label="Volver arriba"
           >
             <ArrowUp className="h-5 w-5" />

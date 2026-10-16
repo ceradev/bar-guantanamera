@@ -1,15 +1,15 @@
-import { Bowlby_One, Montserrat, Open_Sans } from "next/font/google"
+import { Bowlby_One, Inter, League_Spartan } from "next/font/google"
 
-export const montserrat = Montserrat({
+export const leagueSpartan = League_Spartan({
     subsets: ["latin"],
-    variable: "--font-montserrat",
-    weight: ["400", "500", "600", "700"],
+    variable: "--font-league-spartan",
+    weight: ["400", "500", "600", "700", "800", "900"],
 })
 
-export const openSans = Open_Sans({
+export const inter = Inter({
     subsets: ["latin"],
-    variable: "--font-open-sans",
-    weight: ["400", "500"],
+    variable: "--font-inter",
+    weight: ["400", "500", "600", "700"],
 })
 
 export const bowlbyOne = Bowlby_One({

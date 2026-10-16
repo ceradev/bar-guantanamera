@@ -93,7 +93,7 @@ export default function ProductDetailsDialog({ item, open, onOpenChange, addToCa
                                 </span>
                             )}
                             {item.spicy && (
-                                <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full dark:bg-red-900/30 dark:text-red-500">
+                                <span className="px-3 py-1 bg-destructive/15 text-destructive text-xs font-semibold rounded-full">
                                     Picante
                                 </span>
                             )}

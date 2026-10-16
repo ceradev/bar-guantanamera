@@ -301,7 +301,7 @@ export default function MenuBrowser() {
                 }}
                 className="w-full pl-4 pr-10 py-2 bg-transparent text-foreground text-sm font-body focus:outline-none placeholder:text-muted-foreground"
               />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-600" />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
             </div>
           </div>
 
@@ -661,7 +661,7 @@ function ProductCard({ item, addToCart, cart, isFavorite, toggleFavorite, onView
               onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
               className={cn(
                 "h-8 w-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm transition-colors",
-                isFavorite ? "text-red-500 hover:bg-red-50" : "text-foreground hover:bg-primary hover:text-primary-foreground"
+                isFavorite ? "text-destructive hover:bg-destructive/10" : "text-foreground hover:bg-primary hover:text-primary-foreground"
               )}
               title="Añadir a favoritos"
             >
@@ -775,7 +775,7 @@ function ProductListItem({ item, addToCart, cart, isFavorite, toggleFavorite, on
             <button onClick={onViewDetails} disabled={isInactive} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-colors disabled:opacity-50">
               <Eye className="h-4 w-4" />
             </button>
-            <button onClick={toggleFavorite} disabled={isInactive} className={cn("p-1.5 rounded-full transition-colors disabled:opacity-50", isFavorite ? "text-red-500 hover:bg-red-50" : "text-muted-foreground hover:text-foreground hover:bg-secondary")}>
+            <button onClick={toggleFavorite} disabled={isInactive} className={cn("p-1.5 rounded-full transition-colors disabled:opacity-50", isFavorite ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary")}>
               <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
             </button>
           </div>

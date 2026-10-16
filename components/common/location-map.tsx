@@ -3,10 +3,10 @@ import { MapPin } from "lucide-react"
 
 export default function LocationMap() {
   return (
-    <Card className="overflow-hidden shadow-lg">
+    <Card className="overflow-hidden shadow-lg border-border">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-gray-900">
-          <MapPin className="h-6 w-6 text-red-600" />
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <MapPin className="h-6 w-6 text-primary" />
           Nuestra Ubicación
         </CardTitle>
       </CardHeader>

@@ -53,10 +53,20 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        brand: {
+          orange: "#D94A12",
+          coffee: "#3A2720",
+          dark: "#17120F",
+          red: "#C93420",
+          cream: "#F4E2CE",
+        },
       },
       fontFamily: {
-        sans: ["var(--font-montserrat)", "system-ui", "sans-serif"],
-        body: ["var(--font-open-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-league-spartan)", "system-ui", "sans-serif"],
+        body: ["var(--font-inter)", "system-ui", "sans-serif"],
+        heading: ["var(--font-league-spartan)", "system-ui", "sans-serif"],
+        spartan: ["var(--font-league-spartan)", "system-ui", "sans-serif"],
+        inter: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
